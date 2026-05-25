@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Signpack Maker | Update</title>
+  <link rel="icon" type="image/x-icon" href="https://gamearoo.top/ram-api-img/bc91c29e-d0af-460f-a30e-541cd5b57179.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Update Signpack Maker">
+  <meta property="og:description" content="Get the latest portable ZIP and update your Signpack Maker safely.">
+  <meta property="og:image" content="https://gamearoo.top/ram-api-img/bc91c29e-d0af-460f-a30e-541cd5b57179.png">
+  <meta property="og:url" content="https://signs.gamearoo.dev/app/update">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Update Signpack Maker">
+  <meta name="twitter:description" content="Get the latest portable ZIP and update your Signpack Maker safely.">
+  <meta name="twitter:image" content="https://gamearoo.top/ram-api-img/bc91c29e-d0af-460f-a30e-541cd5b57179.png">
+
+  <link href="/css/marketing.css" rel="stylesheet" />
+  <style>
+    code, .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+  </style>
+</head>
+<body class="site-marketing">
+  <nav class="navbar navbar-expand-md site-nav">
+    <div class="container">
+      <a class="navbar-brand" href="/">Signpack Maker</a>
+      <button class="navbar-toggler navbar-dark" type="button" data-bs-toggle="collapse" data-bs-target="#siteNav" aria-controls="siteNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="siteNav">
+        <ul class="navbar-nav ms-auto gap-md-2">
+          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/app">Download</a></li>
+          <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="site-main">
+  <!-- Hero -->
+  <section class="site-hero">
+    <div class="container">
+      <div class="glass mx-auto p-4 p-md-5" style="max-width: 820px;">
+        <div class="hero-icon mb-2">⬆️</div>
+        <h1 class="display-5 fw-bold text-warning mb-2">Update Signpack Maker</h1>
+        <p class="lead subtle mb-4">
+          Download the latest <strong>portable ZIP</strong> and replace your old files.
+          Your sign packs stay safe.
+        </p>
+
+        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+          <a id="downloadBtn" href="/app/releases/Signpackmaker.zip" class="btn btn-warning btn-lg" aria-label="Download latest portable ZIP">
+            Get Latest Portable ZIP
+          </a>
+          <a href="/app/" class="btn btn-outline-light btn-lg" aria-label="See install page & older versions">
+            Install / Older Versions
+          </a>
+        </div>
+
+        <p class="text-white-50 small mt-2 mb-0">
+          Portable • No installer • Works offline
+        </p>
+
+        <div class="mt-4 d-flex flex-wrap gap-2 justify-content-center">
+          <span class="badge text-bg-dark border" id="versionPill">Latest: …</span>
+          <span class="badge text-bg-dark border" id="publishedPill" hidden>Published: …</span>
+          <span class="badge text-bg-danger border" id="mandatoryPill" hidden>Mandatory</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Update Steps -->
+  <section class="container py-5">
+    <h3 class="text-center text-warning mb-4">How to update (portable ZIP)</h3>
+    <ul class="list-group list-group-flush glass mx-auto" style="max-width: 820px;">
+      <li class="list-group-item bg-transparent text-light">
+        1) Close <strong>Signpack Maker</strong>.
+      </li>
+      <li class="list-group-item bg-transparent text-light">
+        2) Click <strong>Get Latest Portable ZIP</strong> (above).
+      </li>
+      <li class="list-group-item bg-transparent text-light">
+        3) Extract the ZIP.
+      </li>
+      <li class="list-group-item bg-transparent text-light">
+        4) <strong>Move/replace</strong> the extracted files into your existing <em>portable folder</em>
+        (the same folder as your current <code>Signpack Maker.exe</code>). Allow overwrites.
+      </li>
+      <li class="list-group-item bg-transparent text-light">
+        5) Reopen the app. Done!
+      </li>
+    </ul>
+
+    <div class="glass mx-auto mt-4 p-3 p-md-4" style="max-width: 820px;">
+      <div class="d-flex align-items-center">
+        <div class="me-3">📦</div>
+        <div>
+          <div class="fw-semibold">Where are my sign packs?</div>
+          <div class="text-white-50 small">
+            Windows: <span class="code">%LOCALAPPDATA%\SignpackMaker\packs</span><br/>
+            Updating the app won’t touch this folder.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Release notes (from update.json / fallback) -->
+  <section class="container pb-5">
+    <div class="glass mx-auto p-4 p-md-5" style="max-width: 820px;">
+      <h4 class="text-warning mb-3">What’s in this update</h4>
+      <pre id="notesBox" class="mb-0 text-white-50" style="white-space:pre-wrap;">Loading release notes…</pre>
+    </div>
+  </section>
+  </main>
+
+  <footer class="site-footer text-center">
+    <div class="container">
+      <nav class="d-flex flex-wrap justify-content-center gap-3 mb-2 small">
+        <a href="/">Home</a>
+        <a href="/app">Download</a>
+        <a href="#" data-signpack-github>GitHub</a>
+      </nav>
+      <small class="text-white-50">&copy; 2026 Signpack Maker</small>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/site-config.js"></script>
+  <script src="/js/site-links.js"></script>
+  <script>
+    (function () {
+      const downloadBtn    = document.getElementById('downloadBtn');
+      const versionPill    = document.getElementById('versionPill');
+      const publishedPill  = document.getElementById('publishedPill');
+      const mandatoryPill  = document.getElementById('mandatoryPill');
+      const notesBox       = document.getElementById('notesBox');
+
+      const REL_BASE = "/app/releases/";
+      const zipName  = v => `Signpackmaker${v}.zip`;
+      const buildUrl = (v, url) => url || (REL_BASE + zipName(v));
+
+      function setUi(info) {
+        const { version, url, published, notes, mandatory } = info;
+
+        versionPill.textContent = version ? `Latest: v${version}` : 'Latest: unknown';
+        if (url) {
+          downloadBtn.href = url;
+          downloadBtn.setAttribute('download', '');
+          downloadBtn.textContent = version ? `Download v${version} (.zip)` : 'Get Latest Portable ZIP';
+        }
+        if (published) {
+          const d = new Date(published);
+          if (!isNaN(d)) {
+            publishedPill.textContent = 'Published: ' + d.toLocaleDateString();
+            publishedPill.hidden = false;
+          }
+        }
+        if (mandatory === true) {
+          mandatoryPill.hidden = false;
+        }
+        notesBox.textContent = (notes && String(notes).trim()) ? notes.trim() : 'No notes provided.';
+      }
+
+      async function getLatestFromUpdateJson() {
+        try {
+          const r = await fetch('/app/update.json', { cache: 'no-store' });
+          if (!r.ok) return null;
+          const j = await r.json();
+          const latest = (j.latest || '').trim();
+          if (!latest) return null;
+
+          let assetUrl = null;
+          if (Array.isArray(j.assets)) {
+            const zip = j.assets.find(a => a && typeof a.url === 'string' && a.url.toLowerCase().endsWith('.zip'));
+            if (zip) assetUrl = zip.url;
+          }
+          return {
+            version: latest,
+            url: buildUrl(latest, assetUrl),
+            published: j.published || null,
+            notes: j.notes || '',
+            mandatory: !!j.mandatory
+          };
+        } catch { return null; }
+      }
+
+      async function getLatestFromVersionsJson() {
+        try {
+          const r = await fetch('/app/versions.json', { cache: 'no-store' });
+          if (!r.ok) return null;
+          const j = await r.json();
+          const arr = Array.isArray(j.releases) ? j.releases : (Array.isArray(j) ? j : []);
+          if (!arr.length) return null;
+
+          const sorted = arr
+            .filter(x => x && x.version)
+            .sort((a, b) => {
+              const pa = String(a.version).split('.').map(n => +n || 0);
+              const pb = String(b.version).split('.').map(n => +n || 0);
+              for (let i = 0; i < 3; i++) if (pa[i] !== pb[i]) return pb[i] - pa[i];
+              return 0;
+            });
+
+          const pick = sorted.find(x => x.supported !== false) || sorted[0];
+          if (!pick) return null;
+
+          return {
+            version: String(pick.version),
+            url: buildUrl(pick.version, pick.url),
+            published: pick.date || null,
+            notes: pick.notes || '',
+            mandatory: false
+          };
+        } catch { return null; }
+      }
+
+      (async () => {
+        const fromUpdate = await getLatestFromUpdateJson();
+        const info = fromUpdate || await getLatestFromVersionsJson();
+
+        if (info) {
+          setUi(info);
+        } else {
+          versionPill.textContent = 'Latest: (offline)';
+          notesBox.textContent = 'Could not load update details. You can still try the download button above.';
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+:root {
+  --accent: #ffa500;
+  --bg-dark: #1c1c1c;
+  --glass-bg: rgba(0, 0, 0, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-subtle: #cfcfcf;
+}
+
+body.site-marketing {
+  background: var(--bg-dark) url("/images/roadbg.jpg") no-repeat center center fixed;
+  background-size: cover;
+  font-family: "Poppins", sans-serif;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-main {
+  flex: 1;
+}
+
+.site-nav {
+  background: rgba(0, 0, 0, 0.72);
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.site-nav .navbar-brand {
+  font-weight: 700;
+  color: var(--accent) !important;
+}
+
+.site-nav .nav-link {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 500;
+}
+
+.site-nav .nav-link:hover,
+.site-nav .nav-link.active {
+  color: var(--accent) !important;
+}
+
+.site-hero {
+  padding: 4rem 0 3.5rem;
+  text-align: center;
+  background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65));
+}
+
+@media (min-width: 768px) {
+  .site-hero {
+    padding: 5.5rem 0 4rem;
+  }
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.site-hero .glass {
+  max-width: 900px;
+}
+
+.subtle {
+  color: var(--text-subtle);
+}
+
+.btn-warning {
+  font-weight: 600;
+}
+
+.site-section {
+  padding: 3rem 0;
+}
+
+.site-section h2,
+.site-section h3 {
+  color: var(--accent);
+}
+
+.feature-card {
+  border-color: var(--glass-border) !important;
+  height: 100%;
+}
+
+.step-card {
+  border-color: var(--glass-border) !important;
+}
+
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #1c1c1c;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.badge-outline {
+  border: 1px solid var(--glass-border);
+}
+
+.dim {
+  opacity: 0.65;
+}
+
+.list-group.glass .list-group-item {
+  border-color: var(--glass-border);
+}
+
+.site-footer {
+  background: rgba(0, 0, 0, 0.75);
+  border-top: 1px solid var(--glass-border);
+  padding: 1.25rem 0;
+  margin-top: auto;
+}
+
+.site-footer a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--accent);
+}
+
+.hero-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.open-source-box {
+  max-width: 860px;
+}

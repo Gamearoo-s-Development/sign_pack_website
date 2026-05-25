@@ -1,0 +1,53 @@
+name: Bug report
+description: Report a problem with the Signpack Maker website
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. The **website** in this repo is open source.
+        The desktop app source is not public yet — note which surface you used (web vs desktop ZIP).
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See error
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Website (home / install / login)
+        - Web editor (/signpack)
+        - Desktop app (portable ZIP)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App version (if desktop)
+      placeholder: e.g. 1.0.2
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Browser/OS, or Windows version for desktop app

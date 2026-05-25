@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Signpack Maker | Traffic Control Mod</title>
+  <link rel="icon" type="image/x-icon" href="https://gamearoo.top/ram-api-img/bc91c29e-d0af-460f-a30e-541cd5b57179.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="shortcut icon" href="/images/sign.png" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/signpack.css" />
+</head>
+<style>
+  #signList {
+    display: grid;
+    grid-template-columns: repeat(6, 64px);
+    gap: 10px;
+    justify-content: center;
+    background-color: #1e1e1e; /* GUI panel bg */
+    padding: 16px;
+    border: 4px solid #555;
+    border-radius: 8px;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+  }
+  
+  .sign-entry {
+    width: 64px;
+    height: 64px;
+    background: #2a2a2a;
+    border: 2px solid #888;
+    border-radius: 4px;
+    box-shadow: 0 0 3px #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s ease;
+    cursor: grab;
+    position: relative;
+  }
+  
+  .sign-entry img {
+    max-width: 90%;
+    max-height: 90%;
+    image-rendering: pixelated;
+  }
+  
+  .sign-entry.cutting {
+    outline: 2px dashed #ff6ec7;
+    background-color: rgba(255, 110, 199, 0.15);
+  }
+  
+  .sign-entry.context-active {
+    border-color: #ff6ec7;
+  }
+  
+  #previewGridContainer {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    border: 2px dashed #ff6ec7;
+    margin-top: 15px;
+  }
+  #previewGridImage {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .grid-box {
+    position: absolute;
+    border: 1px solid rgba(255, 110, 199, 0.9);
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  #signList .sign-entry:hover {
+    transform: scale(1.05);
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  #signList .sign-entry img {
+    width: 80px;
+    height: auto;
+    border-radius: 6px;
+    margin-bottom: 5px;
+  }
+
+  .back-image.selected {
+    border: 2px solid #007bff; /* Bootstrap primary color */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+</style>
+
+<body>
+
+  <script>
+    function updateSignIndex(signIndex) {
+      console.log(signIndex);
+      const url = new URL(window.location.href);
+      <% if (selectedPack) { %>
+        url.searchParams.set('pack', '<%= selectedPack.pack_id %>');
+      <% } %>
+      if (signIndex !== "") {
+        url.searchParams.set('signIndex', signIndex);
+      } else {
+        url.searchParams.delete('signIndex');
+      }
+      window.location.href = url.toString();
+    }
+  
+    function downloadAndReload(packId) {
+      const frame = document.getElementById("downloadFrame");
+      frame.src = `/signpack/download/${packId}`;
+  
+      setTimeout(() => {
+        if (confirm("Export complete. Would you like to remove this pack from the site now?")) {
+          fetch(`/signpack/delete-pack/${packId}`, {
+            method: "POST"
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert("Pack deleted.");
+              location.href = "/signpack";
+            } else {
+              alert("Failed to delete pack.");
+            }
+          });
+        } else {
+          alert("Pack was not deleted and remains available.");
+        }
+      }, 3000);
+    }
+
+    function removeAndReload(packId) {
+      
+  
+      setTimeout(() => {
+        if (confirm("Are you sure you want to remove this pack from the site? This action cannot be undone.")) {
+          fetch(`/signpack/delete-pack/${packId}`, {
+            method: "POST"
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert("Pack deleted.");
+              location.href = "/signpack";
+            } else {
+              alert("Failed to delete pack.");
+            }
+          });
+        } else {
+          alert("Pack was not deleted and remains available.");
+        }
+      }, 3000);
+    }
+  
+    let textlineIndex = 0;
+  
+    function addTextline(data = {}) {
+      const container = document.getElementById("textlinesContainer");
+      const wrapper = document.createElement("div");
+      wrapper.className = "border p-3 mb-3 rounded bg-dark text-white";
+      wrapper.dataset.index = textlineIndex;
+  
+      wrapper.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong>Textline #${textlineIndex + 1}</strong>
+          <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.border').remove()">Remove</button>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-4">
+  <label class="form-label">
+    Label <span class="text-danger">*</span>
+    <span data-bs-toggle="tooltip" title="This text will display above the text field to tell the user what the purpose of the text field is" style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+  </label>
+  <input class="form-control" name="textlines[${textlineIndex}][label]" placeholder="Label" value="${data.label || ''}">
+</div>
+
+          <div class="col-md-2">
+            <label class="form-label">
+    X <span class="text-danger">*</span>
+    <span data-bs-toggle="tooltip" title='The "x" coordinate of the sign to display your text' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+  </label>
+            <input class="form-control" name="textlines[${textlineIndex}][x]" placeholder="X" value="${data.x || ''}" /></div>
+          <div class="col-md-2">
+              <label class="form-label">
+    Y <span class="text-danger">*</span>
+    <span data-bs-toggle="tooltip" title='The "y" coordinate of the sign to display your text' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+  </label>
+            
+            <input class="form-control" name="textlines[${textlineIndex}][y]" placeholder="Y" value="${data.y || ''}" /></div>
+          <div class="col-md-2">
+              <label class="form-label">
+    Width <span class="text-danger">*</span>
+    <span data-bs-toggle="tooltip" title='Determines the width of the text area on the sign' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+  </label>
+            
+            <input class="form-control" name="textlines[${textlineIndex}][width]" placeholder="Width" value="${data.width || ''}" /></div>
+          <div class="col-md-2">
+               <label class="form-label">
+    Max Length 
+    <span data-bs-toggle="tooltip" title='Determines the maximum amount of characters for this text line' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+  </label>
+            <input class="form-control" name="textlines[${textlineIndex}][maxlength]" placeholder="Max" value="${data.maxlength || ''}" /></div>
+          <div class="col-md-2">
+              <label class="form-label">
+    X Scale 
+    <span data-bs-toggle="tooltip" title='How to scale the text on the x-axis. 1 is no scaling, < 1 is scale in, > 1 is scale out.' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+  </label>
+            <input class="form-control" name="textlines[${textlineIndex}][xscale]" placeholder="X Scale" value="${data.xscale || ''}" /></div>
+          <div class="col-md-2">
+             <label class="form-label">
+    Y Scale 
+    <span data-bs-toggle="tooltip" title='How to scale the text on the y-axis. 1 is no scaling, < 1 is scale in, > 1 is scale out.' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+  </label>
+            <input class="form-control" name="textlines[${textlineIndex}][yscale]" placeholder="Y Scale" value="${data.yscale || ''}" /></div>
+          <div class="col-md-2">
+              <label class="form-label">
+    H Align
+    <span data-bs-toggle="tooltip" title='Horizontal text alignment. Options are: left, center, right' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+  </label>
+            <select class="form-control" name="textlines[${textlineIndex}][halign]">
+  <option value="left" ${data.halign === 'left' ? 'selected' : ''}>Left</option>
+  <option value="center" ${data.halign === 'center' ? 'selected' : ''}>Center</option>
+  <option value="right" ${data.halign === 'right' ? 'selected' : ''}>Right</option>
+</select> </div>
+          <div class="col-md-2">
+               <label class="form-label">
+    Y Align
+    <span data-bs-toggle="tooltip" title='Vertical text alignment. Options are: top, center, bottom' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+  </label>
+            <select class="form-control" name="textlines[${textlineIndex}][valign]">
+  <option value="top" ${data.valign === 'top' ? 'selected' : ''}>Top</option>
+  <option value="center" ${data.valign === 'center' ? 'selected' : ''}>Center</option>
+  <option value="bottom" ${data.valign === 'bottom' ? 'selected' : ''}>Bottom</option>
+</select></div>
+          <div class="col-md-2">
+             <label class="form-label">
+    Color
+    <span data-bs-toggle="tooltip" title='The color of the text on the sign. This site will convert to int for you.' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+  </label>
+            <input class="form-control form-control-color" type="color" name="textlines[${textlineIndex}][color]" value="${
+              typeof data.color === 'number' ? '#' + data.color.toString(16).padStart(6, '0') : (data.color || '#000000')
+            }" title="Text Color" />
+          </div>
+        </div>
+      `;
+      container.appendChild(wrapper);
+      textlineIndex++;
+    }
+  
+    function selectExistingBack(path, filename) {
+      document.getElementById("selectedBackImage").value = path;
+  
+      document.querySelectorAll(".back-image").forEach(img =>
+        img.classList.remove("selected")
+      );
+  
+      const selectedImg = document.querySelector(`img[data-back-preview="${filename}"]`);
+      if (selectedImg) {
+        selectedImg.classList.add("selected");
+  
+        const preview = document.getElementById("backImagePreview");
+        if (preview) {
+          preview.src = selectedImg.src;
+          preview.style.display = "block";
+        }
+      } else {
+        console.warn("No match found for filename:", filename);
+      }
+    }
+  
+    function handleSignClick(entry) {
+      if (!cutMode) return;
+  
+      const currentId = entry.dataset.id;
+  
+      if (cutSignIds.length === 0 || !entry.classList.contains("cutting")) {
+        if (entry.classList.contains("cutting")) {
+          entry.classList.remove("cutting");
+          cutSignIds = cutSignIds.filter(id => id !== currentId);
+        } else {
+          entry.classList.add("cutting");
+          cutSignIds.push(currentId);
+        }
+      } else {
+        const container = document.getElementById("signList");
+        const targetEl = container.querySelector(`[data-id='${currentId}']`);
+  
+        cutSignIds.forEach(id => {
+          const cutEl = container.querySelector(`[data-id='${id}']`);
+          if (cutEl) container.insertBefore(cutEl, targetEl);
+        });
+  
+        cutSignIds = [];
+        document.querySelectorAll(".sign-entry").forEach(el => el.classList.remove("cutting"));
+      }
+    }
+  
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".sign-entry").forEach(entry => {
+        entry.addEventListener("click", () => handleSignClick(entry));
+      });
+  
+      const signInput = document.querySelector('input[name="signs"]');
+      if (signInput) {
+        signInput.addEventListener('change', function (e) {
+          const file = e.target.files[0];
+          const signTextInput = document.getElementById('signText');
+          if (signTextInput && !signTextInput.value.trim()) {
+            let name = file.name.replace(/\.[^/.]+$/, '')
+              .replace(/[_-]+/g, ' ')
+              .replace(/([a-z])([A-Z])/g, '$1 $2')
+              .replace(/\s+/g, ' ')
+              .trim()
+              .replace(/\b\w/g, l => l.toUpperCase());
+            signTextInput.value = name;
+          }
+  
+          const img = document.getElementById('previewSignImage');
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            img.src = event.target.result;
+            img.style.display = 'block';
+            img.onload = updateSignPreview;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+  
+      // Tooltip support
+      const tooltipList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipList.forEach(t => new bootstrap.Tooltip(t));
+    });
+  
+    // Back image preview handler
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('backImageInput');
+      const preview = document.getElementById('backImagePreview');
+  
+      if (input && preview) {
+        input.addEventListener('change', e => {
+          const file = e.target.files[0];
+          if (!file) return;
+  
+          const reader = new FileReader();
+          reader.onload = e => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    });
+  </script>
+
+ <script>
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  tooltipTriggerList.map(el => new bootstrap.Tooltip(el))
+</script>
+
+  
+  
+  <% if (selectedSign) { %>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const s = <%- JSON.stringify(selectedSign) %>;
+        console.log("Loaded sign:", s);
+  
+        if (!s) return;
+  
+        let half = false;
+        if (s.halfheight) half = true;
+  
+        document.getElementById("signText").value = s.name || '';
+        document.getElementById("signtype_folder").value = s.type || '';
+        document.getElementById("halfheight").checked = half;
+        document.getElementById("signTool").value = s.tooltip || '';
+  
+        const container = document.getElementById("textlinesContainer");
+        container.innerHTML = '';
+        textlineIndex = 0;
+  
+        if (Array.isArray(s.textlines)) {
+          s.textlines.forEach(line => addTextline(line));
+        } else {
+          console.warn("No textlines or not an array:", s.textlines);
+        }
+      });
+    </script>
+  <% } %>
+<section class="hero text-center text-white py-5">
+  <div class="container">
+    <h1 class="display-4 text-warning fw-bold">Signpack Maker</h1>
+    <p class="lead">Upload custom sign images and manage your signpacks for the <strong>Traffic Control Mod</strong>.</p>
+    <p class="text-light small mb-0">
+  Logged in as <%= user.username %><br>
+  <a href="/logout" class="text-warning">Logout</a>
+  &nbsp;|&nbsp;
+  <a href="/forget-password" title="Will use the forget password page to reset your password" class="text-warning">Reset Password</a>
+  &nbsp;|&nbsp;
+  <a href="/app" class="text-warning">App</a>
+&nbsp;|&nbsp;
+  <a href="/account/delete" class="text-danger">Delete Account</a>
+</p>
+   <p class="text-light small"><span data-bs-toggle="tooltip" title="This explains what this field does." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span> Are markers you can hover to get more info on a field
+</p>
+<p class="text-light small"><span class="text-danger">*</span> are required fields</p>
+   
+    <!-- <% if (!user.discord) { %>
+      <a href="/auth/discord/link" class="btn btn-outline-info btn-sm ms-2">
+        <i class="fab fa-discord me-1"></i> Link Discord
+      </a>
+    
+      
+      <% } else { %>
+        <span class="badge bg-success">Discord Linked</span>
+      <% } %> -->
+  </div>
+</section>
+
+
+
+<section class="upload-section py-5">
+  <div class="container">
+    <h4 class="text-warning mb-3">Upload Existing Signpack <span data-bs-toggle="tooltip" title="Upload a ZIP file of a signpack you've already created" style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+</h4>
+    <form method="POST" action="/signpack/upload" enctype="multipart/form-data" class="mb-4">
+      <div class="mb-3">
+        <label for="signpackFile" class="form-label text-white">Upload .json or .zip Signpack</label>
+        <input class="form-control" type="file" name="signpackFile" id="signpackFile" accept=".json,.zip" required />
+      </div>
+      <button class="btn btn-primary"><i class="fa fa-upload me-2"></i>Upload Signpack</button>
+      <% if (selectedPack) { %>
+        <a href="/signpack/multiblock/<%= selectedPack.pack_id %>" class="btn btn-outline-dark ms-2">
+          <i class="fa fa-th me-1"></i> Create Multi-Block Sign <span data-bs-toggle="tooltip" title="Allows you to create multi-block signs." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+
+        </a>
+      <% } %>
+    </form>
+
+   
+    
+
+    <form id="signpackForm"
+  method="POST"
+  enctype="multipart/form-data"
+  action="<%= selectedSign ? ('/signpack/edit/' + selectedPack.pack_id + '/' + selectedSign.id) : ('/signpack/add-to-pack/' + (selectedPack ? selectedPack.pack_id : 'new')) %>">
+
+      <div class="mb-4">
+        <label class="form-label text-black">Select Signpack  <span data-bs-toggle="tooltip" title="Choose an existing pack to edit, or click “Create New” to start a new one." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+</label>
+        <select class="form-select" onchange="location.href='/signpack?pack=' + this.value">
+          <% signpacks.forEach(p => { %>
+            <option value="<%= p.pack_id %>" <%= selectedPack?.pack_id === p.pack_id ? 'selected' : '' %>><%= p.name %></option>
+          <% }) %>
+          <option value="new" <%= !selectedPack ? 'selected' : '' %>>➕ Create New</option>
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label text-black">Pack Name <span class="text-danger">*</span> <span data-bs-toggle="tooltip" title="What your Sign Pack will be called. This variable will be shown in-game." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <input class="form-control" name="packName" value="<%= selectedPack?.name || '' %>" required />
+      </div>
+
+      <% if (selectedPack && selectedPack.signs.length) { %>
+        <div class="mb-4">
+          <label class="form-label text-black">Edit Sign <span data-bs-toggle="tooltip" title="Choose a sign to edit, or select “New Sign” to add a new one." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+          <select class="form-select" onchange="updateSignIndex(parseInt(this.value) + 1)">
+
+
+            <option value="">➕ New Sign</option>
+            <% selectedPack.signs.forEach((s, i) => { %>
+              <option value="<%= i %>" <%= selectedSign && selectedSign.name === s.name ? 'selected' : '' %>><%= s.name %></option>
+            <% }) %>
+          </select>
+        </div>
+      <% } %>
+
+      <div class="mb-4">
+        <label class="form-label text-black">Front Image <% if (!selectedSign || !selectedSign.front) { %><span class="text-danger">*</span><% } %> <span data-bs-toggle="tooltip" title="Refers to the Image for the front of this sign." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <input class="form-control" type="file" name="signs" accept="image/*"  <%= !selectedSign || !selectedSign.front ? 'required' : '' %>  />
+        <% if (selectedSign && selectedSign.front && selectedPack) { %>
+          <div class="mt-2">
+            <strong class="text-secondary">Current: <span data-bs-toggle="tooltip" title="This is the current front image." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></strong>
+            <div class="mt-1">
+              <img src="/users/<%= user.username %>/packs/<%= selectedPack.pack_id %>/<%= selectedSign.type %>/<%= selectedSign.front %>" style="width: 80px; cursor: pointer" class="border rounded shadow-sm" />
+            </div>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label text-black">Back Image <span data-bs-toggle="tooltip" title="Refers to the Image for the back of this sign. You Can select a exsisting one below." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <input class="form-control mb-2" type="file" name="back" accept="image/*" id="backImageInput" />
+        <img id="backImagePreview" src="#" alt="Back Image Preview" style="width: 80px; display: none;" class="border rounded shadow-sm mt-2" />
+        <% if (selectedSign && selectedSign.back) { %>
+          <div class="mt-2">
+            <strong class="text-secondary">Current Back: <span data-bs-toggle="tooltip" title="The current back being used." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></strong>
+            <div class="mt-1">
+              <img
+                src="/users/<%= user.username %>/packs/<%= selectedPack.pack_id %>/<%= selectedSign.type %>/<%= selectedSign.back %>"
+                style="width: 80px; cursor: pointer"
+                title="<%= selectedSign.back %>"
+                class="border rounded shadow-sm"
+              />
+            </div>
+          </div>
+        <% } %>
+        
+        <% if (backImages?.length) { %>
+          <div class="text-secondary">Or select existing:</div>
+          <div class="d-flex flex-wrap gap-2">
+            <% backImages.forEach(img => { %>
+            
+
+            <img
+                src="<%= img.publicPath %>"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="<%= img.name %>"
+                 data-back-preview="<%= img.name %>"
+                class="border rounded shadow-sm back-image"
+                style="width: 80px; cursor: pointer;"
+                onclick="selectExistingBack('<%= img.publicPath %>', '<%= img.name %>')"
+
+              />
+            
+            <% }) %>
+            
+          </div>
+          <input type="hidden" name="existingBack" id="selectedBackImage" />
+        <% } %>
+      </div>
+      
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          const backImageInput = document.getElementById('backImageInput');
+          const backImagePreview = document.getElementById('backImagePreview');
+        
+          if (backImageInput) {
+            backImageInput.addEventListener('change', function (e) {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                  backImagePreview.src = event.target.result;
+                  backImagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+              }
+            });
+          }
+        });
+        
+        function selectExistingBack(path, filename) {
+          // Set full path in hidden input (for backend to copy from)
+          document.getElementById("selectedBackImage").value = path;
+        
+          // Remove current selection highlight
+          document.querySelectorAll(".back-image").forEach(img =>
+            img.classList.remove("selected")
+          );
+        
+          // Apply .selected to the clicked image
+          const selectedImg = document.querySelector(img[data-back-preview="${filename}"]);
+          if (selectedImg) {
+            selectedImg.classList.add("selected");
+        
+            // Update the preview image
+            const preview = document.getElementById("backImagePreview");
+            if (preview) {
+              preview.src = selectedImg.src;
+              preview.style.display = "block";
+            }
+          } else {
+            console.warn("No match found for filename:", filename);
+          }
+        }
+        
+        
+        
+        
+        
+      </script>
+      
+      
+
+      <div class="mb-4">
+        <label class="form-label text-black">Sign Name <span class="text-danger">*</span> <span data-bs-toggle="tooltip" title="	Name of your sign. This is what will be presented in-game." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <input class="form-control" name="signstext" id="signText" required />
+      </div>
+
+     
+      
+
+      <div class="mb-4">
+        <label class="form-label text-black">Sign Type Folder <% if (!selectedSign || !selectedSign.type) { %><span class="text-danger">*</span><% } %> <span data-bs-toggle="tooltip" title="What folder should the pack put this sign in (Done for you on export) example road_signs." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <input class="form-control mb-2" name="signtype_folder" id="signtype_folder"
+          placeholder="e.g. useful_road" value="<%= selectedSign?.type || '' %>" list="folderList" <%= !selectedSign || !selectedSign.type ? 'required' : '' %> />
+      </div>
+      
+      <div class="mb-4">
+        <label class="form-label text-black">Sign Type Display Name <% if (!selectedSign || !selectedSign.type) { %><span class="text-danger">*</span><% } %> <span data-bs-toggle="tooltip" title="The Catagory name Example Road Signs." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <input class="form-control mb-2" name="signtype_label" id="signtype_label"
+          placeholder="e.g. Road Signs" value="<%= selectedPack?.types?.[selectedSign?.type] || '' %>" list="labelList" <%= !selectedSign || !selectedSign.type ? 'required' : '' %>  />
+      </div>
+      
+      <datalist id="folderList">
+        <% if (selectedPack && selectedPack.types) { %>
+          <% Object.keys(selectedPack.types).forEach(type => { %>
+            <option value="<%= type %>">
+          <% }) %>
+        <% } %>
+      </datalist>
+      
+      <datalist id="labelList">
+        <% if (selectedPack && selectedPack.types) { %>
+          <% Object.values(selectedPack.types).forEach(label => { %>
+            <option value="<%= label %>">
+          <% }) %>
+        <% } %>
+      </datalist>
+      
+      
+      <script>
+        const existingTypes = <%- JSON.stringify(selectedPack?.types || {}) %>;
+      
+        const folderInput = document.getElementById("signtype_folder");
+        const labelInput = document.getElementById("signtype_label");
+      
+        folderInput.addEventListener("input", () => {
+          const folderValue = folderInput.value.trim();
+      
+          if (existingTypes.hasOwnProperty(folderValue)) {
+            labelInput.value = existingTypes[folderValue];
+            labelInput.disabled = true;
+          } else {
+            labelInput.value = "";
+            labelInput.disabled = false;
+          }
+        });
+      
+        // Auto-trigger on page load in case it's prefilled
+        window.addEventListener("DOMContentLoaded", () => {
+          folderInput.dispatchEvent(new Event("input"));
+        });
+      </script>
+      
+      <div class="mb-4">
+        <label class="form-label text-black">Sign Tooltip  <span data-bs-toggle="tooltip" title="	Gives Users help on what the sign is for" style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <input class="form-control"  name="signstool"  id="signTool" />
+      </div>
+      
+      <div class="mb-4">
+        <div class="form-check">
+          <input style="background-color: black;" class="form-check-input" type="checkbox" name="halfheight" id="halfheight">
+          <label class="form-check-label text-black"  for="halfheight">halfheight <span data-bs-toggle="tooltip" title="Rather or not this sign is half the hight of a normal sign usally just the bottom half." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        </div>
+        
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label text-black">Sign Preview <span data-bs-toggle="tooltip" title="A Live Preview of the signs front usefull with textlines." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <br/>
+        <div id="signPreviewContainer" style="position: relative; display: inline-block;">
+          <% if (selectedSign && selectedSign.front && selectedPack) { %>
+            <img id="previewSignImage" src="/users/<%= user.username %>/packs/<%= selectedPack.pack_id %>/<%= selectedSign.type %>/<%= selectedSign.front %>" style="width: 400px; display: block;" class="border rounded shadow-sm" />
+          <% } else { %>
+            <img id="previewSignImage" src="#" style="width: 400px; display: none;" class="border rounded shadow-sm" />
+          <% } %>
+        </div>
+      </div>
+      
+
+      <div class="mb-4">
+        <label class="form-label text-black">Textlines <span data-bs-toggle="tooltip" title="Manage TextLines of a sign." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <div id="textlinesContainer"></div>
+        <button type="button" class="btn btn-outline-primary mt-2" onclick="addTextline()">+ Add Textline <span data-bs-toggle="tooltip" title="Adds A new text line." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></button>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-warning fw-bold"><i class="fa fa-plus me-1"></i>Save Sign <span data-bs-toggle="tooltip" title="Saves the new sign to the json file." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></button>
+      
+        
+
+        <% if (selectedPack) { %>
+          <a href="#" onclick="downloadAndReload('<%= selectedPack.pack_id %>')" class="btn btn-warning">Export Signpack <span data-bs-toggle="tooltip" title="Exports the PAck to your computer." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></a>
+          <a href="#" onclick="removeAndReload('<%= selectedPack.pack_id %>')" class="btn btn-danger">Delete Signpack <span data-bs-toggle="tooltip" title="Deletes the pack from the websites files (DANAGER this cant be undone)." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></a>
+          <button class="btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#jsonModal">Preview JSON <span data-bs-toggle="tooltip" title="Have a look at the generated json file." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></button>
+        <% } %>
+      </div>
+    </form>
+    <% if (selectedSign) { %>
+      <form action="/signpack/delete/<%= selectedPack.pack_id %>/<%= selectedSign.id %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this sign?');" class="d-inline">
+        <button class="btn btn-danger fw-bold">
+          <i class="fa fa-trash me-1"></i>Delete Sign <span data-bs-toggle="tooltip" title="Remove the Sign from the pack." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+        </button>
+      </form>
+    <% } %>
+   
+    
+ 
+    
+  </div>
+</section>
+
+<% if (selectedPack) { %>
+  <div class="modal fade" id="jsonModal" tabindex="-1" aria-labelledby="jsonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content bg-dark text-light">
+        <div class="modal-header">
+          <h5 class="modal-title" id="jsonModalLabel">Signpack JSON Preview</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <pre><code><%= JSON.stringify(selectedPack, null, 2) %></code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<iframe id="downloadFrame" style="display: none;"></iframe>
+<% if (selectedPack && selectedPack.signs.length) { %>
+  <p class="text-dark mt-2">Total Signs: <strong><%= selectedPack.signs.length %></strong> <span data-bs-toggle="tooltip" title="The Total amount of signs in the pack." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></p>
+ 
+  <div class="mb-4">
+   
+    <label class="form-label text-black">Reorder Signs <span data-bs-toggle="tooltip" title="Allows to download or reorder signs in the pack to manage how its seen in game." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+    <br/>
+    <button id="cutModeBtn" class="btn btn-secondary btn-sm mt-3" onclick="toggleCutMode()">✂️ Enter Cut Mode <span data-bs-toggle="tooltip" title="Reorder the signs easier but  selecting multiple at a time." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></button>
+  <button class="btn btn-secondary btn-sm mt-3" onclick="saveOrder()"><i class="fa fa-save me-1"></i>Save Order <span data-bs-toggle="tooltip" title="Saves the new order of the signs after you reorder." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></button>
+ 
+  <br/>
+  <br/>
+  <p class="text-dark">To Use Cut mode enable it above and right click a sign and select cut for reorder to this for multiple then click where you want to place them or drag in drop indifidual signs</p>
+<p class="text-dark">You can select a sign by right clicking and clicking select sign</p>
+<p class="text-dark">You can download the signs image using the download image button by right clicking a sign</p>
+  
+  <!-- <button class="btn btn-secondary btn-sm mt-3" onclick="window.location.href='/signpack/reorder/<%= selectedPack.pack_id %>'"><i class="fa fa-save me-1"></i>Advanced Sorting</button> -->
+    <div id="signList">
+      
+      <% selectedPack.signs.forEach(sign => { %>
+        <div class="sign-entry" data-id="<%= sign.id %>">
+          <img
+            src="/users/<%= user.username %>/packs/<%= selectedPack.pack_id %>/<%= sign.type %>/<%= sign.front %>"
+            alt="<%= sign.name %>"
+            title="<%= sign.name %>"
+            data-bs-toggle="tooltip"
+          />
+        </div>
+      <% }) %>
+    </div>
+    
+   
+  </div>
+<% } %>
+
+<script>
+  window.cutMode = false;
+  let cutSignIds = [];
+  let currentEntry = null;
+document.addEventListener('DOMContentLoaded', () => {
+  const signList = document.getElementById('signList');
+  if (!signList) return;
+
+ 
+
+  // Create custom context menu
+  const menu = document.createElement('div');
+  menu.id = 'customContextMenu';
+  menu.style.position = 'absolute';
+  menu.style.background = 'rgba(0, 0, 0, 0.9)';
+  menu.style.border = '1px solid #ff5600';
+  menu.style.borderRadius = '8px';
+  menu.style.color = 'white';
+  menu.style.padding = '0.5rem';
+  menu.style.zIndex = 9999;
+  menu.style.display = 'none';
+  menu.style.fontSize = '0.9rem';
+  menu.innerHTML = `
+  <div id="contextSelect" style="padding: 4px 8px; cursor: pointer;">🔍 Select This Sign <span data-bs-toggle="tooltip" title="Select This Sign." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></div>
+  <div id="contextCut" style="padding: 4px 8px; cursor: pointer;">✂️ Cut for Reorder <span data-bs-toggle="tooltip" title="Add this to a multiple sign move operation." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></div>
+  <div id="contextSave" style="padding: 4px 8px; cursor: pointer;">💾 Download Image <span data-bs-toggle="tooltip" title="Download This front image for the sign." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></div>
+`;
+
+document.addEventListener('click', () => {
+  menu.style.display = 'none';
+  document.querySelectorAll('.sign-entry').forEach(el => el.classList.remove('context-active'));
+});
+
+
+
+  document.body.appendChild(menu);
+
+  signList.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+  
+    // Get the *actual sign-entry* element
+    const entry = e.target.closest('.sign-entry');
+    if (!entry || !signList.contains(entry)) {
+      console.warn("❌ Right-click target was not a sign-entry");
+      return;
+    }
+  
+    currentEntry = entry;
+  
+    // Optional: Visual feedback
+    document.querySelectorAll('.sign-entry').forEach(el => el.classList.remove('context-active'));
+    entry.classList.add('context-active');
+  
+    // Show menu
+    menu.style.left = `${e.pageX}px`;
+    menu.style.top = `${e.pageY}px`;
+    menu.style.display = 'block';
+  });
+
+  // Option 1: Select sign and load
+  document.getElementById('contextSelect').addEventListener('click', () => {
+    if (currentEntry) {
+      const all = Array.from(document.querySelectorAll('.sign-entry'));
+      const index = all.indexOf(currentEntry) + 1;
+
+      const url = new URL(window.location.href);
+      url.searchParams.set('signIndex', index);
+      window.location.href = url.toString();
+    }
+    menu.style.display = 'none';
+  });
+
+  
+
+  // Option 2: Toggle Cut Mode for this sign
+  document.getElementById('contextCut').addEventListener('click', () => {
+    if (!currentEntry) return;
+    const id = currentEntry.dataset.id;
+
+    if (!window.cutMode) {
+      alert("✂️ Cut Mode is not active.");
+      menu.style.display = 'none';
+      return;
+    }
+
+    if (currentEntry.classList.contains('cutting')) {
+      currentEntry.classList.remove('cutting');
+      cutSignIds = cutSignIds.filter(cutId => cutId !== id);
+    } else {
+      currentEntry.classList.add('cutting');
+      cutSignIds.push(id);
+    }
+
+    menu.style.display = 'none';
+  });
+
+  // Hide menu on outside click or scroll
+  document.addEventListener('click', () => menu.style.display = 'none');
+  document.addEventListener('scroll', () => menu.style.display = 'none');
+});
+
+document.addEventListener('click', async (e) => {
+  if (e.target.id === 'contextSave') {
+    console.log("💾 Save clicked");
+
+    if (!currentEntry) return;
+
+    const img = currentEntry.querySelector('img');
+    if (!img || !img.src) {
+      alert("No image found to download.");
+      return;
+    }
+    
+    try {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.src = img.src;
+
+      await image.decode();
+
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth || 128;
+      canvas.height = image.naturalHeight || 128;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0);
+
+      canvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${img.alt}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, 'image/png');
+    } catch (err) {
+      console.error("❌ Failed to save image:", err);
+      alert("Failed to download image. It might be blocked by CORS or not loaded.");
+    }
+
+    // Hide the menu
+    document.getElementById('customContextMenu').style.display = 'none';
+  }
+});
+
+
+
+
+
+  function toggleCutMode() {
+    window.cutMode = !window.cutMode;
+  cutSignIds = [];
+  document.getElementById("cutModeBtn").classList.toggle("btn-danger", cutMode);
+  document.getElementById("cutModeBtn").innerText = cutMode ? "❌ Exit Cut Mode" : "✂️ Enter Cut Mode";
+
+  document.querySelectorAll(".sign-entry").forEach(el => el.classList.remove("cutting"));
+}
+
+
+  function handleSignClick(entry) {
+  if (!cutMode) return;
+
+  const currentId = entry.dataset.id;
+
+  if (cutSignIds.length === 0 || !entry.classList.contains("cutting")) {
+    // Select or toggle selection
+    if (entry.classList.contains("cutting")) {
+      entry.classList.remove("cutting");
+      cutSignIds = cutSignIds.filter(id => id !== currentId);
+    } else {
+      entry.classList.add("cutting");
+      cutSignIds.push(currentId);
+    }
+  } else {
+    // Paste all before this entry
+    const container = document.getElementById("signList");
+    const targetEl = container.querySelector(`[data-id='${currentId}']`);
+
+
+
+    cutSignIds.forEach(id => {
+      const cutEl = container.querySelector(`[data-id='${id}']`);
+
+      if (cutEl) container.insertBefore(cutEl, targetEl);
+    });
+
+    // Reset selection
+    cutSignIds = [];
+    document.querySelectorAll(".sign-entry").forEach(el => el.classList.remove("cutting"));
+  }
+}
+
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".sign-entry").forEach(entry => {
+      entry.addEventListener("click", () => handleSignClick(entry));
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const signInput = document.querySelector('input[name="signs"]');
+    if (!signInput) return;
+  
+    signInput.addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      if (!file) return;
+  
+      // Auto-generate sign name if blank
+      const signTextInput = document.getElementById('signText');
+      if (signTextInput && !signTextInput.value.trim()) {
+        let name = file.name.replace(/\.[^/.]+$/, ''); // remove extension
+        name = name
+          .replace(/[_-]+/g, ' ')                // underscores/dashes → space
+          .replace(/([a-z])([A-Z])/g, '$1 $2')   // camelCase → spaced
+          .replace(/\s+/g, ' ')                  // normalize spaces
+          .trim()
+          .replace(/\b\w/g, l => l.toUpperCase()); // capitalize each word
+  
+        signTextInput.value = name;
+      }
+  
+      // Image preview
+      const img = document.getElementById('previewSignImage');
+      reader.onload = function (event) {
+        if (img) {
+          img.src = event.target.result;
+          img.style.display = 'block';
+          img.onload = updateSignPreview;
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+  </script>
+
+  
+  
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+      new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+  
+<% if (selectedPack && selectedPack.signs.length) { %>
+  <script>
+    const sortable = new Sortable(document.getElementById("signList"), {
+      animation: 150,
+      ghostClass: 'sortable-ghost',
+      dragClass: 'sortable-drag',
+      // Uncomment the below line ONLY if using a drag handle (like grip icon)
+      // handle: '.drag-handle',
+    });
+  
+    function saveOrder() {
+      const order = Array.from(document.querySelectorAll('.sign-entry'))
+        .map(el => el.dataset.id);
+  
+      fetch('/signpack/reorder/<%= selectedPack.pack_id %>', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ order })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("Order saved!");
+          location.reload();
+        } else {
+          alert("Failed to save order.");
+        }
+      });
+    }
+  </script>
+  <% } %>
+  
+
+<script>
+  // Preview logic for textlines
+  function updateSignPreview() {
+    const container = document.getElementById('signPreviewContainer');
+    const previewImage = document.getElementById('previewSignImage');
+    if (!previewImage || !previewImage.src || previewImage.src === '#' || !previewImage.complete) return;
+  
+    container.querySelectorAll('.preview-textline').forEach(e => e.remove());
+  
+    const imgWidth = previewImage.clientWidth;
+    const imgHeight = previewImage.clientHeight;
+  
+    const FONT_HEIGHT = 10;
+    const previewSize = Math.min(imgWidth, imgHeight);
+    const fullScale = previewSize / (FONT_HEIGHT * 16);
+    const fontHeightScaled = FONT_HEIGHT * fullScale;
+  
+    const textlineWrappers = document.querySelectorAll('#textlinesContainer > .border');
+  
+    textlineWrappers.forEach((wrapper, idx) => {
+      const x = parseFloat(wrapper.querySelector('[name$="[x]"]').value) || 0;
+      const y = parseFloat(wrapper.querySelector('[name$="[y]"]').value) || 0;
+      const label = wrapper.querySelector('[name$="[label]"]').value || `Line ${idx + 1}`;
+      const color = wrapper.querySelector('[name$="[color]"]').value || '#ff0000';
+      const xscale = parseFloat(wrapper.querySelector('[name$="[xscale]"]').value) || 1;
+      const yscale = parseFloat(wrapper.querySelector('[name$="[yscale]"]').value) || 1;
+      const width = parseFloat(wrapper.querySelector('[name$="[width]"]').value) || 1;
+      const maxlength = parseInt(wrapper.querySelector('[name$="[maxlength]"]').value) || null;
+      const halign = (wrapper.querySelector('[name$="[halign]"]').value || 'left').toLowerCase();
+      const valign = (wrapper.querySelector('[name$="[valign]"]').value || 'top').toLowerCase();
+  
+      const effectiveLabel = maxlength ? label.substring(0, maxlength) : label;
+  
+      const posX = x * fontHeightScaled;
+      const posY = y * fontHeightScaled;
+  
+      const boxWidth = width * fontHeightScaled;
+      const boxHeight = FONT_HEIGHT * yscale * fullScale;
+  
+      let offsetX = 0;
+      if (halign === 'center') offsetX = -boxWidth / 2;
+      else if (halign === 'right') offsetX = -boxWidth;
+  
+      let offsetY = 0;
+      if (valign === 'center') offsetY = -boxHeight / 2;
+      else if (valign === 'bottom') offsetY = -boxHeight;
+  
+      const bg = document.createElement('div');
+      bg.className = 'preview-textline';
+      bg.style.position = 'absolute';
+      bg.style.left = `${previewImage.offsetLeft + posX}px`;
+      bg.style.top = `${previewImage.offsetTop + posY}px`;
+      bg.style.width = `${boxWidth}px`;
+      bg.style.height = `${boxHeight}px`;
+      bg.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+      bg.style.backgroundColor = 'rgba(0,255,0,0.75)';
+      bg.style.pointerEvents = 'none';
+      container.appendChild(bg);
+  
+      const text = document.createElement('div');
+      text.className = 'preview-textline';
+      text.innerText = effectiveLabel;
+      text.style.position = 'absolute';
+      text.style.left = `${previewImage.offsetLeft + posX}px`;
+      text.style.top = `${previewImage.offsetTop + posY}px`;
+      text.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${xscale}, ${yscale})`;
+      text.style.color = color;
+      text.style.fontWeight = 'bold';
+      text.style.whiteSpace = 'nowrap';
+      text.style.textAlign = 'center';
+      text.style.width = `${boxWidth}px`;
+      text.style.height = `${boxHeight}px`;
+      text.style.display = 'flex';
+      text.style.alignItems = 'center';
+      text.style.justifyContent = 'center';
+      text.style.pointerEvents = 'none';
+      text.style.textShadow = '1px 1px 2px black';
+  
+      container.appendChild(text);
+    });
+  }
+  
+
+
+  
+  
+  // Listen to input changes in textlinesContainer
+  document.getElementById('textlinesContainer').addEventListener('input', updateSignPreview);
+
+  // Listen for image changes
+  document.querySelector('input[name="signs"]').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+  
+    if (!file) return;
+  
+    // 🎯 Convert filename into nice-looking title
+    const signTextInput = document.getElementById('signText');
+    if (signTextInput && !signTextInput.value.trim()) {
+      let name = file.name.replace(/\.[^/.]+$/, ''); // remove extension
+      name = name
+        .replace(/[_-]+/g, ' ')                // underscores/dashes → space
+        .replace(/([a-z])([A-Z])/g, '$1 $2')   // camelCase → spaced
+        .replace(/\s+/g, ' ')                  // normalize spaces
+        .trim()
+        .replace(/\b\w/g, l => l.toUpperCase()); // capitalize each word
+  
+      signTextInput.value = name;
+    }
+  
+  
+
+    reader.onload = function (event) {
+      const img = document.getElementById('previewSignImage');
+      img.src = event.target.result;
+      img.style.display = 'block';
+      img.onload = updateSignPreview;
+    };
+  
+    reader.readAsDataURL(file);
+  });
+
+  // Initialize preview on load
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(updateSignPreview, 200); // ensures correct sizing
+  });
+</script>
+
+
+
+
+<script>
+  document.getElementById("signpackForm").addEventListener("submit", function (e) {
+    const newBackInput = document.getElementById("backImageInput");
+    const existingBackInput = document.getElementById("selectedBackImage");
+
+    const newBackSelected = newBackInput && newBackInput.files.length > 0;
+    const existingBackSelected = existingBackInput && existingBackInput.value.trim() !== "";
+
+    const currentBackExists = <%= selectedSign && selectedSign.back ? 'true' : 'false' %>;
+
+    if (!newBackSelected && !existingBackSelected && !currentBackExists) {
+      e.preventDefault();
+      alert("Please select a back image (upload new, choose existing, or keep current).");
+    }
+  });
+</script>
+
+
+
+
+
+
+  
+  
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

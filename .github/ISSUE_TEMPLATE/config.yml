@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/Gamea/signpack/blob/main/CONTRIBUTING.md
+    about: How to set up locally and open pull requests
+  - name: Security policy
+    url: https://github.com/Gamea/signpack/blob/main/SECURITY.md
+    about: Report security issues privately (do not use public issues)

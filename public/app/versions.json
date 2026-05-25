@@ -1,0 +1,8 @@
+{
+  "releases": [
+   
+    { "version": "1.0.1", "date": "2025-10-10","supported": true, "notes": "Fixed file uploads" },
+
+    { "version": "1.0.0", "date": "2025-10-10", "supported": false, "notes": "Removed due to critical bug." }
+  ]
+}
