@@ -3,7 +3,7 @@
 Create and manage custom **signpacks** for Minecraft's **Traffic Control Mod** — via the web editor or the portable Windows desktop app.
 
 - **Live site:** [https://signs.gamearoo.dev](https://signs.gamearoo.dev)
-- **GitHub:** [https://github.com/Gamea/signpack](https://github.com/Gamea/signpack)
+- **GitHub:** [https://github.com/Gamearoo-s-Development/sign_pack_website](https://github.com/Gamearoo-s-Development/sign_pack_website)
 
 ## What's open source
 
