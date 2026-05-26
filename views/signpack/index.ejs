@@ -456,7 +456,7 @@
               <h3>Ram AI Helper</h3>
             </div>
             <p class="text-secondary small mb-0">
-              Ram AI is off on this server (<code>RAM_AI_ENABLED=false</code>). The editor works fully without it.
+              Ram AI is not available on this server right now. The editor works fully without it — upload, save, and export are unchanged.
             </p>
           </div>
         <% } else { %>
@@ -465,9 +465,31 @@
               <span class="editor-section-num"><i class="fa fa-wand-magic-sparkles"></i></span>
               <h3>Ram AI Helper</h3>
             </div>
-            <p class="text-secondary small mb-0">
-              Open the floating <strong>Ram AI</strong> button at the bottom-right of the screen for chat assistance while you edit.
+            <p class="text-secondary small mb-3">
+              Open the <strong>Ram AI</strong> button at the bottom-right for chat assistance while you edit. Nothing is sent until you ask.
             </p>
+            <div class="editor-ram-ai-help-grid">
+              <div class="editor-ram-ai-help-card">
+                <i class="fa fa-shield-halved" aria-hidden="true"></i>
+                <strong>Secure by design</strong>
+                <span>Handled through Signpack Maker — your credentials stay protected.</span>
+              </div>
+              <div class="editor-ram-ai-help-card">
+                <i class="fa fa-hourglass-half" aria-hidden="true"></i>
+                <strong>Queue-aware</strong>
+                <span>Live status while Ram AI generates — cancel anytime.</span>
+              </div>
+              <div class="editor-ram-ai-help-card">
+                <i class="fa fa-lightbulb" aria-hidden="true"></i>
+                <strong>Advisory only</strong>
+                <span>Suggestions you review — you control what gets saved.</span>
+              </div>
+              <div class="editor-ram-ai-help-card">
+                <i class="fa fa-circle-check" aria-hidden="true"></i>
+                <strong>Optional</strong>
+                <span>Editing works the same if you never open the assistant.</span>
+              </div>
+            </div>
           </div>
         <% } %>
       </section>
@@ -917,9 +939,9 @@
 
     <div class="ram-ai-drawer-body">
       <div id="ramAiChatMessages" class="ram-ai-chat-messages" aria-live="polite">
-        <div class="ram-ai-empty">
-          <p>Hi — I can help with Traffic Control signpacks.</p>
-          <p class="text-secondary small mb-0">Nothing is sent until you send a message or click a quick action.</p>
+        <div class="ram-ai-empty" id="ramAiEmptyState">
+          <p class="ram-ai-empty-lead">Hi — I can help with Traffic Control signpacks.</p>
+          <p class="ram-ai-empty-note">Nothing is sent until you send a message or choose a quick action.</p>
         </div>
       </div>
     </div>
@@ -935,7 +957,7 @@
       <div class="ram-ai-footer-section ram-ai-quick-wrap">
         <div class="ram-ai-footer-label">Quick actions</div>
         <div class="ram-ai-quick-chips">
-          <button type="button" class="ram-ai-chip" data-ram-ai-action="validate_json">Review signs.json</button>
+          <button type="button" class="ram-ai-chip" data-ram-ai-action="validate_json">Review signpack</button>
           <button type="button" class="ram-ai-chip" data-ram-ai-action="explain_selected">Explain field</button>
           <button type="button" class="ram-ai-chip" data-ram-ai-action="help_textlines">Textlines</button>
           <button type="button" class="ram-ai-chip" data-ram-ai-action="convert_color">Color</button>
@@ -953,8 +975,8 @@
             <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxPackName" /> Include pack name</label>
             <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxSignMeta" checked /> Selected sign only</label>
             <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxTextlines" checked /> Textlines</label>
-            <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxPackSummary" checked /> signs.json summary</label>
-            <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxPackJson" /> Full signs.json preview</label>
+            <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxPackSummary" checked /> Pack summary</label>
+            <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxPackJson" /> Full pack preview</label>
           </div>
           <div class="ram-ai-context-row">
             <select class="form-select form-select-sm" id="ramAiFieldSelect" aria-label="Field to explain">

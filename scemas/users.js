@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 const PasskeySchema = new mongoose.Schema(
   {
-    credentialID: { type: String, required: true },
+    credentialID: { type: String, required: true, trim: true },
     credentialPublicKey: { type: String, required: true },
     counter: { type: Number, default: 0 },
     transports: { type: [String], default: [] },
@@ -11,7 +11,7 @@ const PasskeySchema = new mongoose.Schema(
     createdAt: { type: Date, default: Date.now },
     lastUsedAt: { type: Date, default: null },
   },
-  { _id: false }
+  { _id: false, strict: true }
 );
 
 const PrefixSchema = new mongoose.Schema({
@@ -50,10 +50,15 @@ resetTokenExpiry: Date,
       },
       passkeys: {
         type: [PasskeySchema],
-        default: []
+        default: undefined,
       },
     key: String,
     RateLimit: Number
+}, {
+  strict: true,
+  minimize: false,
 });
+
+PrefixSchema.index({ "passkeys.credentialID": 1 }, { sparse: true });
 
 const MessageModel = (module.exports = mongoose.model("members", PrefixSchema));

@@ -11,16 +11,57 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <link href="/css/marketing.css" rel="stylesheet" />
   <style>
-    .ram-ai-placeholder {
-      min-height: 140px;
-      border: 2px dashed rgba(255, 165, 0, 0.35);
-      border-radius: 12px;
-      display: flex;
+    .ram-ai-help-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+
+    .ram-ai-help-card {
+      border: 1px solid rgba(255, 179, 71, 0.22);
+      border-radius: 14px;
+      padding: 1.1rem 1.15rem;
+      background: rgba(255, 179, 71, 0.06);
+      height: 100%;
+    }
+
+    .ram-ai-help-card .help-icon {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 10px;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: rgba(255, 255, 255, 0.45);
+      background: rgba(255, 179, 71, 0.18);
+      color: #ffc76a;
+      margin-bottom: 0.65rem;
+      font-size: 1rem;
+    }
+
+    .ram-ai-help-card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffe2b3;
+      margin: 0 0 0.4rem;
+    }
+
+    .ram-ai-help-card p {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .ram-ai-help-list {
+      margin: 0;
+      padding-left: 1.1rem;
+      color: rgba(255, 255, 255, 0.78);
       font-size: 0.9rem;
-      background: rgba(0, 0, 0, 0.2);
+      line-height: 1.6;
+    }
+
+    .ram-ai-help-list li {
+      margin-bottom: 0.35rem;
     }
   </style>
 </head>
@@ -39,76 +80,50 @@
   <main class="site-main container py-5">
     <div class="glass p-4 p-md-5 mb-4">
       <h1 class="text-warning mb-3"><i class="fa fa-wand-magic-sparkles me-2"></i>Ram AI Helper</h1>
-      <p class="lead subtle">
-        An <strong>optional</strong> assistant inside the Signpack Maker web editor. It helps you work faster on
-        Traffic Control signpacks — you stay in control of what gets saved.
+      <p class="lead subtle mb-0">
+        An <strong>optional</strong> assistant built into Signpack Maker. It helps you work faster on Traffic Control signpacks — you stay in control of every change you save.
       </p>
-      <a href="/login" class="btn btn-warning">Open editor (login required)</a>
+      <a href="/login" class="btn btn-warning mt-3">Open editor (login required)</a>
     </div>
 
-    <div class="row g-4 mb-4">
-      <div class="col-md-6">
-        <div class="card glass bg-transparent text-light p-4 h-100">
-          <h2 class="h5 text-warning">Optional, not required</h2>
-          <p class="subtle mb-0">
-            Upload, save, and export signpacks work the same with Ram AI off. The helper only runs when you click a button.
-          </p>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card glass bg-transparent text-light p-4 h-100">
-          <h2 class="h5 text-warning">Your API key stays private</h2>
-          <p class="subtle mb-0">
-            The browser never talks to Ram AI directly and never sees <code>RAM_AI_API_KEY</code>. Only the Signpack Maker server calls
-            <code>/api/ram-ai/models</code>, <code>/helper</code>, <code>/status</code>, and <code>/cancel</code>. Choose a model from the dropdown (display names only).
-          </p>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card glass bg-transparent text-light p-4 h-100">
-          <h2 class="h5 text-warning">Shared queue</h2>
-          <p class="subtle mb-0">
-            Ram AI handles one generation at a time. Extra requests wait in a queue — the editor shows busy / queued status and lets you cancel.
-          </p>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card glass bg-transparent text-light p-4 h-100">
-          <h2 class="h5 text-warning">Advisory suggestions</h2>
-          <p class="subtle mb-0">
-            Ram AI does not auto-edit your pack. Copy answers into tooltip text, notes, or JSON yourself after reviewing them.
-          </p>
-        </div>
-      </div>
+    <div class="ram-ai-help-grid mb-4">
+      <article class="ram-ai-help-card">
+        <span class="help-icon" aria-hidden="true"><i class="fa fa-circle-check"></i></span>
+        <h2>Optional, not required</h2>
+        <p>Signpack Maker works fully without Ram AI. The assistant only activates when you choose to use it.</p>
+      </article>
+      <article class="ram-ai-help-card">
+        <span class="help-icon" aria-hidden="true"><i class="fa fa-shield-halved"></i></span>
+        <h2>Secure by design</h2>
+        <p>Ram AI requests are handled securely through Signpack Maker. Your browser never directly exposes private credentials.</p>
+      </article>
+      <article class="ram-ai-help-card">
+        <span class="help-icon" aria-hidden="true"><i class="fa fa-hourglass-half"></i></span>
+        <h2>Queue-aware generation</h2>
+        <p>Live queue updates and generation status help you track longer AI tasks while you keep editing.</p>
+      </article>
+      <article class="ram-ai-help-card">
+        <span class="help-icon" aria-hidden="true"><i class="fa fa-lightbulb"></i></span>
+        <h2>Advisory suggestions</h2>
+        <p>Ram AI suggests improvements and guidance, but you stay in control of all final signpack changes.</p>
+      </article>
     </div>
 
-    <h2 class="text-warning h4 mb-3">What it can help with</h2>
-    <ul class="subtle">
-      <li>Explain signpack fields and Traffic Control rules</li>
-      <li>Review <code>signs.json</code> for possible issues</li>
-      <li>Suggest tooltips, notes, and textline ideas</li>
-      <li>Convert colors to integer format</li>
-      <li>Draft a pack README / description</li>
-      <li>Custom questions with optional editor context you choose</li>
-    </ul>
-
-    <h2 class="text-warning h4 mb-3 mt-4">Screenshots</h2>
-    <div class="row g-3">
-      <div class="col-md-4">
-        <div class="ram-ai-placeholder">Editor — Ram AI panel (placeholder)</div>
-      </div>
-      <div class="col-md-4">
-        <div class="ram-ai-placeholder">Queue / thinking status (placeholder)</div>
-      </div>
-      <div class="col-md-4">
-        <div class="ram-ai-placeholder">Custom prompt + quick actions (placeholder)</div>
-      </div>
+    <div class="glass p-4 p-md-5">
+      <h2 class="text-warning h4 mb-3"><i class="fa fa-list-check me-2"></i>What it can help with</h2>
+      <ul class="ram-ai-help-list">
+        <li>Explain sign fields and Traffic Control sign rules</li>
+        <li>Review your signpack for possible issues</li>
+        <li>Suggest tooltips, notes, and text line ideas</li>
+        <li>Convert colors for in-game text formatting</li>
+        <li>Draft a pack description or README</li>
+        <li>Answer custom questions with optional editor context you choose to share</li>
+      </ul>
+      <p class="subtle small mt-4 mb-0">
+        Learn more about Ram AI capabilities at
+        <a href="https://ai.rambot.xyz/docs" target="_blank" rel="noopener noreferrer">ai.rambot.xyz/docs</a>.
+      </p>
     </div>
-
-    <p class="subtle small mt-4 mb-0">
-      Server setup: see <a href="#" data-signpack-github>README</a> and <code>docs/RAM_AI_HELPER.md</code> in the repository.
-      Docs: <a href="https://ai.rambot.xyz/docs" target="_blank" rel="noopener noreferrer">ai.rambot.xyz/docs</a>
-    </p>
   </main>
 
   <footer class="site-footer text-center py-4">

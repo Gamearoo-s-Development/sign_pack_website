@@ -51,7 +51,7 @@
   var defaultModelName = "Ram AI Code Agent 1.0 - fast";
   var LIMITS = { PROMPT: 2000, SIGNS_JSON: 12000, SELECTED_SIGN: 4000 };
   var GUARDRAIL_SUGGESTIONS = [
-    { action: "validate_json", label: "Review signs.json" },
+    { action: "validate_json", label: "Review signpack" },
     { action: "help_textlines", label: "Explain textlines" },
     { action: "explain_selected", label: "Help with sign types" },
     { action: "ask_quick", label: "Multi-block sign tips" },
@@ -141,7 +141,7 @@
 
   function msgIdentity(role) {
     if (role === "system") {
-      return { title: "System", subtitle: "Signpack Maker guardrails" };
+      return { title: "System", subtitle: "Signpack Maker" };
     }
     if (role === "ai") {
       return { title: "Ram AI", subtitle: "AI Assistant" };
@@ -274,12 +274,36 @@
     }
   }
 
+  function emptyStateHtml() {
+    return (
+      '<div class="ram-ai-empty">' +
+      '<p class="ram-ai-empty-lead">Hi — I can help with Traffic Control signpacks.</p>' +
+      '<p class="ram-ai-empty-note">Nothing is sent until you send a message or choose a quick action.</p>' +
+      '<div class="ram-ai-help-grid" role="list">' +
+      '<div class="ram-ai-help-card" role="listitem">' +
+      '<i class="fa fa-shield-halved" aria-hidden="true"></i>' +
+      "<strong>Secure by design</strong>" +
+      "<span>Requests are handled through Signpack Maker — credentials stay protected.</span>" +
+      "</div>" +
+      '<div class="ram-ai-help-card" role="listitem">' +
+      '<i class="fa fa-hourglass-half" aria-hidden="true"></i>' +
+      "<strong>Queue-aware</strong>" +
+      "<span>Live status while Ram AI works — you can cancel anytime.</span>" +
+      "</div>" +
+      '<div class="ram-ai-help-card" role="listitem">' +
+      '<i class="fa fa-lightbulb" aria-hidden="true"></i>' +
+      "<strong>Advisory only</strong>" +
+      "<span>You review suggestions and choose what to save.</span>" +
+      "</div>" +
+      "</div></div>"
+    );
+  }
+
   function ensureMessagesEmptyState() {
     var box = $(IDS.messages);
     if (!box) return;
     if (chatMessages.length) return;
-    box.innerHTML =
-      '<div class="ram-ai-empty"><p>Hi - I can help with Traffic Control signpacks.</p><p class="text-secondary small mb-0">Nothing is sent until you send a message or click a quick action.</p></div>';
+    box.innerHTML = emptyStateHtml();
   }
 
   function isRelevantToSignpackMaker(prompt, context) {

@@ -53,7 +53,7 @@
  "version": "1.0.0",
  "main": "app.js",
  "scripts": {
-  "test": "node \"lib/ramAiGuardrails.test.js\" && node --test \"lib/multiblockTiles.test.js\" && node --test \"lib/passkeys.test.js\""
+  "test": "node \"lib/ramAiGuardrails.test.js\" && node --test \"lib/multiblockTiles.test.js\" && node --test \"lib/passkeys.test.js\" && node --test \"lib/passkeyStorage.test.js\""
  },
  "keywords": [],
  "author": "",

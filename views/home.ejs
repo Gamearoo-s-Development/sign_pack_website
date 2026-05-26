@@ -99,29 +99,42 @@
 
     <section class="site-section container">
       <h2 class="text-center mb-4">Ram AI Helper <span class="badge bg-secondary fs-6 align-middle">Optional</span></h2>
-      <div class="row g-4 align-items-stretch">
-        <div class="col-lg-7">
-          <div class="card glass bg-transparent text-light p-4 h-100">
-            <p class="subtle">
-              When enabled on the server, the web editor includes <strong>Ram AI Helper</strong> — an assistant for Traffic Control signpacks.
-              It can explain fields, review <code>signs.json</code>, suggest tooltips, help with textlines, convert colors, and draft pack descriptions.
-            </p>
-            <ul class="subtle small">
-              <li>Not required — upload, save, and export work without it</li>
-              <li>No API key in your browser; requests go through Signpack Maker only</li>
-              <li>May queue when Ram AI is busy; the editor stays usable</li>
-              <li>Suggestions are advisory — you choose what to copy</li>
-            </ul>
-            <a href="/help/ram-ai.html" class="btn btn-outline-warning btn-sm me-2">Learn more</a>
-            <a href="/login" class="btn btn-warning btn-sm">Try in editor</a>
+      <p class="text-center subtle mx-auto mb-4" style="max-width: 42rem;">
+        A built-in assistant for Traffic Control signpacks. Use it when you want help — upload, save, and export work the same without it.
+      </p>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="card glass bg-transparent text-light p-3 h-100">
+            <div class="text-warning mb-2"><i class="fa fa-circle-check"></i></div>
+            <h5 class="text-warning h6">Optional</h5>
+            <p class="subtle small mb-0">Works only when you open the assistant — never required to edit signpacks.</p>
           </div>
         </div>
-        <div class="col-lg-5">
-          <div class="card glass bg-transparent text-light p-4 h-100 d-flex flex-column justify-content-center text-center" style="border: 2px dashed rgba(255,165,0,0.35); min-height: 180px;">
-            <i class="fa fa-wand-magic-sparkles fa-2x text-warning mb-2"></i>
-            <span class="subtle small">Screenshot placeholder — Ram AI panel in editor</span>
+        <div class="col-md-6 col-lg-3">
+          <div class="card glass bg-transparent text-light p-3 h-100">
+            <div class="text-warning mb-2"><i class="fa fa-shield-halved"></i></div>
+            <h5 class="text-warning h6">Secure by design</h5>
+            <p class="subtle small mb-0">Requests are handled safely through Signpack Maker — not exposed in your browser.</p>
           </div>
         </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="card glass bg-transparent text-light p-3 h-100">
+            <div class="text-warning mb-2"><i class="fa fa-hourglass-half"></i></div>
+            <h5 class="text-warning h6">Queue-aware</h5>
+            <p class="subtle small mb-0">See live status while Ram AI works — keep editing while you wait.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="card glass bg-transparent text-light p-3 h-100">
+            <div class="text-warning mb-2"><i class="fa fa-lightbulb"></i></div>
+            <h5 class="text-warning h6">You're in control</h5>
+            <p class="subtle small mb-0">Suggestions are advisory — you decide what to apply to your pack.</p>
+          </div>
+        </div>
+      </div>
+      <div class="text-center">
+        <a href="/help/ram-ai.html" class="btn btn-outline-warning btn-sm me-2">Learn more</a>
+        <a href="/login" class="btn btn-warning btn-sm">Try in editor</a>
       </div>
     </section>
 

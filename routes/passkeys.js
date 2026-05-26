@@ -1,6 +1,5 @@
 const express = require("express");
 const {
-  toBase64Url,
   publicPasskey,
   registrationOptions,
   verifyRegistration,
@@ -9,12 +8,16 @@ const {
   authenticatorFromPasskey,
   normalizeCredentialId,
   credentialIdFromAuthBody,
-  credentialIdsEqual,
-  findUserAndPasskeyByCredentialId,
-  migratePasskeyIds,
   saveSession,
   passkeyDebug,
 } = require("../lib/passkeys");
+const {
+  persistPasskey,
+  logPasskeySaved,
+  findUserByPasskeyCredentialId,
+  listPasskeysForUser,
+  removePasskey,
+} = require("../lib/passkeyStorage");
 
 const PASSKEY_NOT_FOUND_MSG =
   "Passkey not found for this account. Sign in with your password and add a passkey in Account Settings.";
@@ -36,6 +39,28 @@ function mapSessionUser(doc) {
 
 function createPasskeyRouter({ usersDB, webauthn }) {
   const router = express.Router();
+
+  if (process.env.NODE_ENV !== "production") {
+    router.get("/dev/passkeys/me", requireAuth, async (req, res) => {
+      try {
+        const passkeys = await listPasskeysForUser(usersDB, req.session.user._id);
+        return res.json({
+          ok: true,
+          count: passkeys.length,
+          passkeys: passkeys.map((p) => ({
+            name: p.name || "Passkey",
+            credentialIdPrefix: normalizeCredentialId(p.credentialID).slice(0, 8),
+            credentialIdLen: normalizeCredentialId(p.credentialID).length,
+            createdAt: p.createdAt || null,
+            lastUsedAt: p.lastUsedAt || null,
+          })),
+        });
+      } catch (err) {
+        console.error("dev passkeys/me failed", err);
+        return res.status(500).json({ ok: false, error: "Could not load passkeys." });
+      }
+    });
+  }
 
   router.post("/account/passkeys/register/options", requireAuth, async (req, res) => {
     try {
@@ -72,79 +97,77 @@ function createPasskeyRouter({ usersDB, webauthn }) {
       }
 
       const info = verification.registrationInfo;
-      const credentialID = normalizeCredentialId(
-        info.credential?.id ?? req.body?.id ?? req.body?.rawId
-      );
+      const credentialID = normalizeCredentialId(req.body?.id ?? req.body?.rawId);
+      const verifiedId = normalizeCredentialId(info.credential?.id);
+
       if (!credentialID) {
-        return res.status(400).json({ ok: false, error: "Missing credential id from authenticator." });
+        return res.status(400).json({ ok: false, error: "Missing credential id from browser." });
       }
 
-      passkeyDebug("register verify", {
-        credentialIdLen: credentialID.length,
-        credentialIdPrefix: credentialID.slice(0, 8),
+      if (verifiedId && verifiedId !== credentialID) {
+        passkeyDebug("register id mismatch", {
+          bodyLen: credentialID.length,
+          verifiedLen: verifiedId.length,
+        });
+      }
+
+      const persist = await persistPasskey(usersDB, req.session.user._id, {
+        credentialID,
+        credentialPublicKey: info.credential.publicKey,
+        counter: info.credential.counter,
+        transports: req.body?.response?.transports ?? info.credential.transports,
+        name: req.body?.passkeyName || "Passkey",
       });
 
-      const doc = await usersDB.findOne({ _id: req.session.user._id });
-      if (!doc) return res.status(404).json({ ok: false, error: "User not found." });
+      logPasskeySaved(req.session.user._id, persist.userName, {
+        passkeyCount: persist.passkeyCount,
+        credentialIdLen: credentialID.length,
+        credentialIdPrefix: credentialID.slice(0, 8),
+        persisted: persist.saved || persist.duplicate,
+        duplicate: persist.duplicate,
+      });
 
-      const exists = (doc.passkeys || []).some((p) => credentialIdsEqual(p.credentialID, credentialID));
-      if (!exists) {
-        doc.passkeys = doc.passkeys || [];
-        doc.passkeys.push({
-          credentialID,
-          credentialPublicKey: toBase64Url(info.credential.publicKey),
-          counter: Number(info.credential.counter || 0),
-          transports: Array.isArray(req.body?.response?.transports)
-            ? req.body.response.transports.slice(0, 8)
-            : [],
-          name: String(req.body?.passkeyName || "Passkey").slice(0, 80) || "Passkey",
-          createdAt: new Date(),
-          lastUsedAt: null,
-        });
-      } else {
-        migratePasskeyIds(doc.passkeys, credentialID);
+      if (!persist.saved && !persist.duplicate) {
+        return res.status(500).json({ ok: false, error: "Passkey could not be saved." });
       }
-
-      doc.updatedAt = new Date();
-      await doc.save();
 
       req.session.webauthnRegChallenge = null;
       req.session.webauthnRegUser = null;
       await saveSession(req);
 
+      const passkeys = await listPasskeysForUser(usersDB, req.session.user._id);
+
       return res.json({
         ok: true,
-        passkeys: (doc.passkeys || []).map(publicPasskey),
-        message: "Passkey added.",
+        passkeys: passkeys.map(publicPasskey),
+        message: persist.duplicate ? "Passkey already registered." : "Passkey added.",
       });
     } catch (err) {
       console.error("passkey register verify failed", err);
+      if (err.code === "PASSKEY_NOT_PERSISTED") {
+        return res.status(500).json({
+          ok: false,
+          error: "Passkey verified but not saved. Check database schema and try again.",
+        });
+      }
+      if (err.code === "MISSING_PUBLIC_KEY" || err.code === "MISSING_CREDENTIAL_ID") {
+        return res.status(400).json({ ok: false, error: err.message });
+      }
       return res.status(400).json({ ok: false, error: "Passkey verification failed." });
     }
   });
 
   router.post("/account/passkeys/delete", requireAuth, async (req, res) => {
     try {
-      const credentialID = normalizeCredentialId(req.body?.credentialID);
-      if (!credentialID) {
-        return res.status(400).json({ ok: false, error: "Missing passkey id." });
-      }
-      const doc = await usersDB.findOne({ _id: req.session.user._id });
-      if (!doc) return res.status(404).json({ ok: false, error: "User not found." });
-
-      const before = (doc.passkeys || []).length;
-      doc.passkeys = (doc.passkeys || []).filter(
-        (p) => !credentialIdsEqual(p.credentialID, credentialID)
-      );
-      if (doc.passkeys.length === before) {
+      const result = await removePasskey(usersDB, req.session.user._id, req.body?.credentialID);
+      if (!result.removed) {
         return res.status(404).json({ ok: false, error: "Passkey not found." });
       }
-      doc.updatedAt = new Date();
-      await doc.save();
 
+      const passkeys = await listPasskeysForUser(usersDB, req.session.user._id);
       return res.json({
         ok: true,
-        passkeys: (doc.passkeys || []).map(publicPasskey),
+        passkeys: passkeys.map(publicPasskey),
         message: "Passkey removed.",
       });
     } catch (err) {
@@ -159,17 +182,16 @@ function createPasskeyRouter({ usersDB, webauthn }) {
       let allowCredentialIDs = [];
 
       if (email) {
-        const user = await usersDB.findOne({ _id: email }).select("passkeys").lean();
-        const list = (user && Array.isArray(user.passkeys) ? user.passkeys : [])
+        const passkeys = await listPasskeysForUser(usersDB, email);
+        allowCredentialIDs = passkeys
           .map((p) => normalizeCredentialId(p.credentialID))
           .filter(Boolean);
-        if (!list.length) {
+        if (!allowCredentialIDs.length) {
           return res.status(404).json({
             ok: false,
             error: "No passkeys found for this account.",
           });
         }
-        allowCredentialIDs = list;
       }
 
       const options = await authenticationOptions(allowCredentialIDs, webauthn);
@@ -193,19 +215,15 @@ function createPasskeyRouter({ usersDB, webauthn }) {
   router.post("/login/passkey/verify", async (req, res) => {
     try {
       const expectedChallenge = req.session.webauthnAuthChallenge;
-      const hasChallenge = !!expectedChallenge;
-
       const credentialID = credentialIdFromAuthBody(req.body);
 
       passkeyDebug("login verify", {
-        challenge: hasChallenge,
+        challenge: !!expectedChallenge,
         credentialIdLen: credentialID.length,
         credentialIdPrefix: credentialID.slice(0, 8),
-        hasId: !!req.body?.id,
-        hasRawId: !!req.body?.rawId,
       });
 
-      if (!hasChallenge) {
+      if (!expectedChallenge) {
         return res.status(400).json({
           ok: false,
           error: "Passkey challenge expired. Try again.",
@@ -217,7 +235,7 @@ function createPasskeyRouter({ usersDB, webauthn }) {
       }
 
       const restrictUserId = req.session.webauthnAuthEmail || null;
-      const found = await findUserAndPasskeyByCredentialId(usersDB, credentialID, {
+      const found = await findUserByPasskeyCredentialId(usersDB, credentialID, {
         restrictUserId: restrictUserId || undefined,
       });
 
@@ -225,7 +243,7 @@ function createPasskeyRouter({ usersDB, webauthn }) {
         return res.status(404).json({ ok: false, error: PASSKEY_NOT_FOUND_MSG });
       }
 
-      const { user, passkey, legacy } = found;
+      const { user, passkey } = found;
 
       if (restrictUserId && String(restrictUserId) !== String(user._id)) {
         return res.status(403).json({ ok: false, error: "Passkey does not match that email." });
@@ -244,10 +262,6 @@ function createPasskeyRouter({ usersDB, webauthn }) {
 
       passkey.counter = Number(verification.authenticationInfo.newCounter || passkey.counter || 0);
       passkey.lastUsedAt = new Date();
-      if (legacy) {
-        passkey.credentialID = credentialID;
-        migratePasskeyIds(user.passkeys, credentialID);
-      }
       user.updatedAt = new Date();
       user.markModified("passkeys");
       await user.save();
