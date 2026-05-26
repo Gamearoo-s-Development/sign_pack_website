@@ -151,7 +151,13 @@
             method: "POST",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(authResp),
+            body: JSON.stringify({
+              id: authResp.id,
+              rawId: authResp.rawId,
+              type: authResp.type,
+              response: authResp.response,
+              clientExtensionResults: authResp.clientExtensionResults,
+            }),
           });
           const verifyData = await verifyRes.json();
           if (!verifyRes.ok || !verifyData.ok) {
