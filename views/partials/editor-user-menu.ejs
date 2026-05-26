@@ -1,0 +1,33 @@
+<% const displayLabel = user.displayName || user.username; %>
+<div class="editor-user-menu" id="editorUserMenu">
+  <button type="button" class="editor-user-chip editor-user-menu-toggle" id="editorUserMenuToggle" aria-expanded="false" aria-haspopup="true" aria-controls="editorUserMenuPanel">
+    <% if (user.avatarUrl) { %>
+      <img class="editor-user-avatar editor-user-avatar-img" src="<%= user.avatarUrl %>" alt="" width="32" height="32" />
+    <% } else { %>
+      <div class="editor-user-avatar" aria-hidden="true"><%= user.initials %></div>
+    <% } %>
+    <div class="editor-user-meta">
+      <strong><%= displayLabel %></strong>
+      <span>Logged in</span>
+    </div>
+    <i class="fa fa-chevron-down editor-user-chevron" aria-hidden="true"></i>
+  </button>
+  <div class="editor-user-dropdown" id="editorUserMenuPanel" hidden>
+    <div class="editor-user-dropdown-head">
+      <% if (user.avatarUrl) { %>
+        <img class="editor-user-dropdown-avatar" src="<%= user.avatarUrl %>" alt="" width="40" height="40" />
+      <% } else { %>
+        <div class="editor-user-dropdown-avatar is-initials"><%= user.initials %></div>
+      <% } %>
+      <div>
+        <strong><%= displayLabel %></strong>
+        <span class="editor-user-dropdown-email"><%= user.email %></span>
+      </div>
+    </div>
+    <a href="/account" class="editor-user-dropdown-item"><i class="fa fa-user-gear"></i> Account Settings</a>
+    <a href="/forgot-password" class="editor-user-dropdown-item"><i class="fa fa-key"></i> Reset Password</a>
+    <a href="/account/delete" class="editor-user-dropdown-item is-danger"><i class="fa fa-trash-can"></i> Delete Account</a>
+    <div class="editor-user-dropdown-divider"></div>
+    <a href="/logout" class="editor-user-dropdown-item"><i class="fa fa-right-from-bracket"></i> Logout</a>
+  </div>
+</div>

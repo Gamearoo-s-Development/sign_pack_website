@@ -1,6 +1,19 @@
 const RateLimit = require("express-rate-limit");
 const mongoose = require("mongoose");
 
+const PasskeySchema = new mongoose.Schema(
+  {
+    credentialID: { type: String, required: true },
+    credentialPublicKey: { type: String, required: true },
+    counter: { type: Number, default: 0 },
+    transports: { type: [String], default: [] },
+    name: { type: String, default: "Passkey" },
+    createdAt: { type: Date, default: Date.now },
+    lastUsedAt: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
 const PrefixSchema = new mongoose.Schema({
 	_id: String, // email
 	name: String, //username/name
@@ -23,7 +36,22 @@ const PrefixSchema = new mongoose.Schema({
       },
       resetToken: String,
 resetTokenExpiry: Date,
-      
+      displayName: {
+        type: String,
+        default: null
+      },
+      avatarUrl: {
+        type: String,
+        default: null
+      },
+      updatedAt: {
+        type: Date,
+        default: null
+      },
+      passkeys: {
+        type: [PasskeySchema],
+        default: []
+      },
     key: String,
     RateLimit: Number
 });

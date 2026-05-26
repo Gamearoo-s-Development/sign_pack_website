@@ -1,0 +1,83 @@
+:root {
+  --spm-brand-accent: #ffa500;
+  --spm-brand-subtle: #9ea7b3;
+}
+
+.spm-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.spm-brand-logo-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: rgba(255, 165, 0, 0.12);
+  border: 1px solid rgba(255, 165, 0, 0.32);
+  padding: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 18px rgba(255, 165, 0, 0.2);
+}
+
+.spm-brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.spm-brand-text {
+  min-width: 0;
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.spm-brand-title {
+  margin: 0;
+  color: var(--spm-brand-accent);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.spm-brand-subtitle {
+  font-size: 0.76rem;
+  color: var(--spm-brand-subtle);
+}
+
+.spm-brand--compact .spm-brand-logo-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.spm-brand--compact .spm-brand-title {
+  font-size: 1rem;
+}
+
+.spm-brand--compact .spm-brand-subtitle {
+  font-size: 0.72rem;
+}
+
+@media (max-width: 576px) {
+  .spm-brand-logo-wrap {
+    width: 38px;
+    height: 38px;
+    padding: 4px;
+  }
+
+  .spm-brand-title {
+    font-size: 1rem;
+  }
+
+  .spm-brand-subtitle {
+    font-size: 0.7rem;
+  }
+}

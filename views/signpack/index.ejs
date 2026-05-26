@@ -6,91 +6,32 @@
   <link rel="icon" type="image/x-icon" href="https://gamearoo.top/ram-api-img/bc91c29e-d0af-460f-a30e-541cd5b57179.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="shortcut icon" href="/images/sign.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/brand.css" />
   <link rel="stylesheet" href="/css/signpack.css" />
+  <link rel="stylesheet" href="/css/editor.css" />
+  <link rel="stylesheet" href="/css/ram-ai-chat.css" />
+  <script src="/js/site-config.js"></script>
+  <script src="/js/signpack-guide.js"></script>
 </head>
-<style>
-  #signList {
-    display: grid;
-    grid-template-columns: repeat(6, 64px);
-    gap: 10px;
-    justify-content: center;
-    background-color: #1e1e1e; /* GUI panel bg */
-    padding: 16px;
-    border: 4px solid #555;
-    border-radius: 8px;
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
-  }
-  
-  .sign-entry {
-    width: 64px;
-    height: 64px;
-    background: #2a2a2a;
-    border: 2px solid #888;
-    border-radius: 4px;
-    box-shadow: 0 0 3px #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.1s ease;
-    cursor: grab;
-    position: relative;
-  }
-  
-  .sign-entry img {
-    max-width: 90%;
-    max-height: 90%;
-    image-rendering: pixelated;
-  }
-  
-  .sign-entry.cutting {
-    outline: 2px dashed #ff6ec7;
-    background-color: rgba(255, 110, 199, 0.15);
-  }
-  
-  .sign-entry.context-active {
-    border-color: #ff6ec7;
-  }
-  
-  #previewGridContainer {
-    position: relative;
-    display: inline-block;
-    max-width: 100%;
-    border: 2px dashed #ff6ec7;
-    margin-top: 15px;
-  }
-  #previewGridImage {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-  .grid-box {
-    position: absolute;
-    border: 1px solid rgba(255, 110, 199, 0.9);
-    box-sizing: border-box;
-    pointer-events: none;
-  }
 
-  #signList .sign-entry:hover {
-    transform: scale(1.05);
-    background-color: rgba(255, 255, 255, 0.1);
-  }
+<body class="editor-app"
+  data-ram-ai-enabled="<%= (typeof ramAiEnabled !== 'undefined' && ramAiEnabled) ? 'true' : 'false' %>"
+  data-ram-ai-poll-ms="<%= typeof ramAiPollMs !== 'undefined' ? ramAiPollMs : 5000 %>"
+  data-ram-ai-debug="<%= (typeof ramAiDebug !== 'undefined' && ramAiDebug) ? 'true' : 'false' %>"
+  data-user-avatar="<%= user.avatarUrl || '' %>"
+  data-user-initials="<%= user.initials %>"
+  data-user-display="<%= user.displayName %>"
+  data-user-username="<%= user.username || '' %>">
 
-  #signList .sign-entry img {
-    width: 80px;
-    height: auto;
-    border-radius: 6px;
-    margin-bottom: 5px;
-  }
-
-  .back-image.selected {
-    border: 2px solid #007bff; /* Bootstrap primary color */
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-  }
-</style>
-
-<body>
+<%
+  const TC_SIGNPACK_WIKI = "https://github.com/CSX8600/trafficcontrol/wiki/Making-a-Custom-Sign-Pack";
+  const TC_WIKI_TITLE = "Open the official Traffic Control signpack guide";
+%>
 
   <script>
     function updateSignIndex(signIndex) {
@@ -159,19 +100,24 @@
     function addTextline(data = {}) {
       const container = document.getElementById("textlinesContainer");
       const wrapper = document.createElement("div");
-      wrapper.className = "border p-3 mb-3 rounded bg-dark text-white";
+      wrapper.className = "editor-textline-card text-white";
       wrapper.dataset.index = textlineIndex;
-  
+      const ramOn = document.body.getAttribute("data-ram-ai-enabled") === "true";
+      const ramFieldBtn = (field) =>
+        ramOn
+          ? `<button type="button" class="btn-ram-ai-field" data-ram-ai-field="${field}" title="Ask Ram AI" aria-label="Ram AI explain ${field}"><i class="fa fa-wand-magic-sparkles"></i></button>`
+          : "";
+
       wrapper.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-2">
           <strong>Textline #${textlineIndex + 1}</strong>
-          <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.border').remove()">Remove</button>
+          <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.editor-textline-card').remove()">Remove</button>
         </div>
         <div class="row g-2">
           <div class="col-md-4">
   <label class="form-label">
     Label <span class="text-danger">*</span>
-    <span data-bs-toggle="tooltip" title="This text will display above the text field to tell the user what the purpose of the text field is" style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+    <span data-bs-toggle="tooltip" title="Required. Label shown above the in-game text field (signs.json: label)." class="help-tip">?</span>
   </label>
   <input class="form-control" name="textlines[${textlineIndex}][label]" placeholder="Label" value="${data.label || ''}">
 </div>
@@ -179,47 +125,47 @@
           <div class="col-md-2">
             <label class="form-label">
     X <span class="text-danger">*</span>
-    <span data-bs-toggle="tooltip" title='The "x" coordinate of the sign to display your text' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+    <span data-bs-toggle="tooltip" title="Required. X position on the 16×16 text grid (0–16)." class="help-tip">?</span>
   </label>
             <input class="form-control" name="textlines[${textlineIndex}][x]" placeholder="X" value="${data.x || ''}" /></div>
           <div class="col-md-2">
               <label class="form-label">
     Y <span class="text-danger">*</span>
-    <span data-bs-toggle="tooltip" title='The "y" coordinate of the sign to display your text' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+    <span data-bs-toggle="tooltip" title="Required. Y position on the 16×16 text grid (0–16)." class="help-tip">?</span>
   </label>
             
             <input class="form-control" name="textlines[${textlineIndex}][y]" placeholder="Y" value="${data.y || ''}" /></div>
           <div class="col-md-2">
               <label class="form-label">
     Width <span class="text-danger">*</span>
-    <span data-bs-toggle="tooltip" title='Determines the width of the text area on the sign' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+    <span data-bs-toggle="tooltip" title="Required. Width of the text area on the 16×16 grid." class="help-tip">?</span>
   </label>
             
             <input class="form-control" name="textlines[${textlineIndex}][width]" placeholder="Width" value="${data.width || ''}" /></div>
           <div class="col-md-2">
                <label class="form-label">
     Max Length 
-    <span data-bs-toggle="tooltip" title='Determines the maximum amount of characters for this text line' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+    <span data-bs-toggle="tooltip" title="Optional. Maximum characters players can enter for this line." class="help-tip">?</span>
   </label>
             <input class="form-control" name="textlines[${textlineIndex}][maxlength]" placeholder="Max" value="${data.maxlength || ''}" /></div>
           <div class="col-md-2">
               <label class="form-label">
     X Scale 
-    <span data-bs-toggle="tooltip" title='How to scale the text on the x-axis. 1 is no scaling, < 1 is scale in, > 1 is scale out.' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+    <span data-bs-toggle="tooltip" title='How to scale the text on the x-axis. 1 is no scaling, < 1 is scale in, > 1 is scale out.' class="help-tip">?</span>
   </label>
             <input class="form-control" name="textlines[${textlineIndex}][xscale]" placeholder="X Scale" value="${data.xscale || ''}" /></div>
           <div class="col-md-2">
              <label class="form-label">
     Y Scale 
-    <span data-bs-toggle="tooltip" title='How to scale the text on the y-axis. 1 is no scaling, < 1 is scale in, > 1 is scale out.' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+    <span data-bs-toggle="tooltip" title='How to scale the text on the y-axis. 1 is no scaling, < 1 is scale in, > 1 is scale out.' class="help-tip">?</span>
   </label>
             <input class="form-control" name="textlines[${textlineIndex}][yscale]" placeholder="Y Scale" value="${data.yscale || ''}" /></div>
           <div class="col-md-2">
               <label class="form-label">
     H Align
-    <span data-bs-toggle="tooltip" title='Horizontal text alignment. Options are: left, center, right' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+    <span data-bs-toggle="tooltip" title='Horizontal text alignment. Options are: left, center, right' class="help-tip">?</span>
   </label>
-            <select class="form-control" name="textlines[${textlineIndex}][halign]">
+            <select class="form-select" name="textlines[${textlineIndex}][halign]">
   <option value="left" ${data.halign === 'left' ? 'selected' : ''}>Left</option>
   <option value="center" ${data.halign === 'center' ? 'selected' : ''}>Center</option>
   <option value="right" ${data.halign === 'right' ? 'selected' : ''}>Right</option>
@@ -227,17 +173,17 @@
           <div class="col-md-2">
                <label class="form-label">
     Y Align
-    <span data-bs-toggle="tooltip" title='Vertical text alignment. Options are: top, center, bottom' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+    <span data-bs-toggle="tooltip" title='Vertical text alignment. Options are: top, center, bottom' class="help-tip">?</span>
   </label>
-            <select class="form-control" name="textlines[${textlineIndex}][valign]">
+            <select class="form-select" name="textlines[${textlineIndex}][valign]">
   <option value="top" ${data.valign === 'top' ? 'selected' : ''}>Top</option>
   <option value="center" ${data.valign === 'center' ? 'selected' : ''}>Center</option>
   <option value="bottom" ${data.valign === 'bottom' ? 'selected' : ''}>Bottom</option>
 </select></div>
           <div class="col-md-2">
-             <label class="form-label">
+             <label class="form-label label-with-ram">
     Color
-    <span data-bs-toggle="tooltip" title='The color of the text on the sign. This site will convert to int for you.' style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+    <span data-bs-toggle="tooltip" title="Required. Stored as an integer in signs.json (e.g. red #FF0000 → 16711680). This editor converts from the color picker." class="help-tip">?</span>${ramFieldBtn("color")}
   </label>
             <input class="form-control form-control-color" type="color" name="textlines[${textlineIndex}][color]" value="${
               typeof data.color === 'number' ? '#' + data.color.toString(16).padStart(6, '0') : (data.color || '#000000')
@@ -246,6 +192,11 @@
         </div>
       `;
       container.appendChild(wrapper);
+      wrapper.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (t) {
+        new bootstrap.Tooltip(t);
+      });
+      var form = document.getElementById("signpackForm");
+      if (form) form.dispatchEvent(new Event("change", { bubbles: true }));
       textlineIndex++;
     }
   
@@ -302,7 +253,7 @@
         entry.addEventListener("click", () => handleSignClick(entry));
       });
   
-      const signInput = document.querySelector('input[name="signs"]');
+      const signInput = document.getElementById('frontImageInput') || document.querySelector('input[name="signs"]');
       if (signInput) {
         signInput.addEventListener('change', function (e) {
           const file = e.target.files[0];
@@ -354,13 +305,6 @@
     });
   </script>
 
- <script>
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-  tooltipTriggerList.map(el => new bootstrap.Tooltip(el))
-</script>
-
-  
-  
   <% if (selectedSign) { %>
     <script>
       window.addEventListener("DOMContentLoaded", () => {
@@ -389,114 +333,276 @@
       });
     </script>
   <% } %>
-<section class="hero text-center text-white py-5">
-  <div class="container">
-    <h1 class="display-4 text-warning fw-bold">Signpack Maker</h1>
-    <p class="lead">Upload custom sign images and manage your signpacks for the <strong>Traffic Control Mod</strong>.</p>
-    <p class="text-light small mb-0">
-  Logged in as <%= user.username %><br>
-  <a href="/logout" class="text-warning">Logout</a>
-  &nbsp;|&nbsp;
-  <a href="/forget-password" title="Will use the forget password page to reset your password" class="text-warning">Reset Password</a>
-  &nbsp;|&nbsp;
-  <a href="/app" class="text-warning">App</a>
-&nbsp;|&nbsp;
-  <a href="/account/delete" class="text-danger">Delete Account</a>
-</p>
-   <p class="text-light small"><span data-bs-toggle="tooltip" title="This explains what this field does." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span> Are markers you can hover to get more info on a field
-</p>
-<p class="text-light small"><span class="text-danger">*</span> are required fields</p>
-   
-    <!-- <% if (!user.discord) { %>
-      <a href="/auth/discord/link" class="btn btn-outline-info btn-sm ms-2">
-        <i class="fab fa-discord me-1"></i> Link Discord
+<div class="editor-shell">
+  <header class="editor-topbar">
+    <div class="editor-topbar-inner">
+      <button type="button" class="editor-sidebar-toggle" id="editorSidebarToggle" aria-label="Open menu">
+        <i class="fa fa-bars"></i>
+      </button>
+      <%- include('../partials/brand', { brandHref: '/', brandClass: 'editor-brand', brandTitleTag: 'h1' }) %>
+      <a href="#section-signpack-guide" class="editor-btn editor-btn-ghost editor-btn ms-2" data-editor-scroll="#section-signpack-guide" title="Signpack format guide">
+        <i class="fa fa-circle-question"></i> <span class="btn-label">Help</span>
       </a>
-    
-      
-      <% } else { %>
-        <span class="badge bg-success">Discord Linked</span>
-      <% } %> -->
-  </div>
-</section>
-
-
-
-<section class="upload-section py-5">
-  <div class="container">
-    <h4 class="text-warning mb-3">Upload Existing Signpack <span data-bs-toggle="tooltip" title="Upload a ZIP file of a signpack you've already created" style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
-</h4>
-    <form method="POST" action="/signpack/upload" enctype="multipart/form-data" class="mb-4">
-      <div class="mb-3">
-        <label for="signpackFile" class="form-label text-white">Upload .json or .zip Signpack</label>
-        <input class="form-control" type="file" name="signpackFile" id="signpackFile" accept=".json,.zip" required />
+      <div class="editor-topbar-actions">
+        <%- include('../partials/editor-user-menu') %>
       </div>
-      <button class="btn btn-primary"><i class="fa fa-upload me-2"></i>Upload Signpack</button>
+    </div>
+  </header>
+
+  <div class="editor-sidebar-overlay" id="editorSidebarOverlay" aria-hidden="true"></div>
+
+  <div class="editor-body">
+    <aside class="editor-sidebar" id="editorSidebar" aria-label="Editor navigation">
+      <a href="/signpack" class="editor-sidebar-link is-active" data-editor-nav-href><i class="fa fa-gauge-high"></i> Dashboard</a>
+      <button type="button" class="editor-sidebar-link" data-editor-scroll="#section-signpack-selection"><i class="fa fa-folder-open"></i> My Signpacks</button>
+      <a href="/signpack?pack=new" class="editor-sidebar-link" data-editor-nav-href><i class="fa fa-plus"></i> Create New</a>
+      <button type="button" class="editor-sidebar-link" data-editor-scroll="#section-import-signpack"><i class="fa fa-file-import"></i> Import Signpack</button>
       <% if (selectedPack) { %>
-        <a href="/signpack/multiblock/<%= selectedPack.pack_id %>" class="btn btn-outline-dark ms-2">
-          <i class="fa fa-th me-1"></i> Create Multi-Block Sign <span data-bs-toggle="tooltip" title="Allows you to create multi-block signs." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
-
-        </a>
+        <button type="button" class="editor-sidebar-link" data-export-pack="<%= selectedPack.pack_id %>"><i class="fa fa-download"></i> Export Signpack</button>
+      <% } else { %>
+        <span class="editor-sidebar-link is-disabled"><i class="fa fa-download"></i> Export Signpack</span>
       <% } %>
-    </form>
+      <a href="/account" class="editor-sidebar-link" data-editor-nav-href><i class="fa fa-user-gear"></i> Account Settings</a>
+      <a href="/app" class="editor-sidebar-link" data-editor-nav-href><i class="fa fa-desktop"></i> Desktop App</a>
+      <button type="button" class="editor-sidebar-link" data-editor-scroll="#section-signpack-guide"><i class="fa fa-book"></i> Signpack Guide</button>
+      <button type="button" class="editor-sidebar-link" data-editor-scroll="#section-ram-ai"><i class="fa fa-wand-magic-sparkles"></i> Ram AI Helper</button>
+      <a href="<%= TC_SIGNPACK_WIKI %>" target="_blank" rel="noopener noreferrer" title="<%= TC_WIKI_TITLE %>" class="editor-sidebar-link"><i class="fa fa-external-link"></i> Traffic Control Wiki</a>
+      <div class="editor-sidebar-help">
+        <p>Need help? Report issues or contribute on GitHub.</p>
+        <a href="#" data-signpack-github class="btn btn-sm editor-btn-accent-outline w-100"><i class="fa fa-github me-1"></i> View on GitHub</a>
+      </div>
+    </aside>
 
-   
-    
+    <div class="editor-content">
+      <div class="editor-page-head" id="section-help">
+        <h2><i class="fa fa-pen-ruler"></i> Create or Manage Your Signpack</h2>
+        <p>Upload, edit, and export custom signpacks for the Traffic Control Mod.</p>
+        <div class="editor-page-meta">
+          <span class="editor-legend-inline"><span class="help-tip" data-bs-toggle="tooltip" title="Field help follows the official Traffic Control signpack wiki">?</span> Help tips &nbsp;·&nbsp; <span class="req-mark">*</span> Required</span>
+          <a href="<%= TC_SIGNPACK_WIKI %>" target="_blank" rel="noopener noreferrer" title="<%= TC_WIKI_TITLE %>" class="btn btn-sm editor-btn-accent-outline">Traffic Control Signpack Wiki</a>
+        </div>
+      </div>
+
+      <section class="editor-card editor-guide-card" id="section-signpack-guide">
+        <div class="editor-section-head">
+          <span class="editor-section-num"><i class="fa fa-book"></i></span>
+          <h3>Signpack Guide</h3>
+        </div>
+        <p class="editor-guide-intro">
+          Quick reference based on the
+          <a href="<%= TC_SIGNPACK_WIKI %>" target="_blank" rel="noopener noreferrer" title="<%= TC_WIKI_TITLE %>">Traffic Control “Making a Custom Sign Pack” wiki</a>.
+          Signpack Maker follows the same ZIP + <code>signs.json</code> structure.
+        </p>
+        <div class="editor-guide-links">
+          <a href="#" data-editor-scroll="#section-import-signpack" class="btn btn-sm editor-btn-ghost">Import ZIP</a>
+          <a href="#" data-editor-scroll="#section-images" class="btn btn-sm editor-btn-ghost">Images (PNG)</a>
+          <a href="#" data-editor-scroll="#section-textlines" class="btn btn-sm editor-btn-ghost">Textlines</a>
+        </div>
+        <div class="editor-guide-grid">
+          <div class="editor-guide-block">
+            <h4>Pack file</h4>
+            <ul>
+              <li>ZIP archive with <code>signs.json</code> at the root</li>
+              <li>Textures: <strong>PNG</strong>, square sizes (16×16, 32×32, …)</li>
+              <li>Default folders: circle, diamond, misc, rectangle, square, triangle</li>
+            </ul>
+          </div>
+          <div class="editor-guide-block">
+            <h4>Required pack fields</h4>
+            <ul>
+              <li><code>name</code>, <code>pack_id</code> (UUID)</li>
+              <li><code>signs</code> array</li>
+              <li>Optional: <code>author</code>, <code>types</code></li>
+            </ul>
+          </div>
+          <div class="editor-guide-block">
+            <h4>Required sign fields</h4>
+            <ul>
+              <li><code>id</code> (UUID), <code>name</code>, <code>type</code>, <code>front</code></li>
+              <li>Optional: <code>back</code>, <code>tooltip</code>, <code>halfheight</code>, <code>textlines</code></li>
+              <li>Do not use deprecated <code>variant</code> on new packs</li>
+            </ul>
+          </div>
+          <div class="editor-guide-block">
+            <h4>Textlines (16×16 grid)</h4>
+            <ul>
+              <li>Required: <code>label</code>, <code>x</code>, <code>y</code>, <code>width</code>, <code>color</code> (integer)</li>
+              <li>Optional: <code>maxlength</code>, scales, <code>halign</code>, <code>valign</code></li>
+              <li>Example: red <code>#FF0000</code> → <code>16711680</code></li>
+            </ul>
+          </div>
+          <div class="editor-guide-block">
+            <h4>In-game testing</h4>
+            <ul>
+              <li>Copy ZIP to <code>.minecraft/tc_signpacks/</code></li>
+              <li>Reload packs: <strong>F3 + ]</strong></li>
+            </ul>
+          </div>
+        </div>
+        <p class="editor-guide-credit">
+          Format reference:
+          <a href="<%= TC_SIGNPACK_WIKI %>" target="_blank" rel="noopener noreferrer" title="<%= TC_WIKI_TITLE %>">github.com/CSX8600/trafficcontrol wiki</a>
+          — see also <code>docs/SIGNPACK_GUIDE.md</code> in this repository.
+        </p>
+      </section>
+
+      <div id="guideValidationBanner" class="editor-validation-banner" hidden aria-live="polite"></div>
+
+      <section id="section-ram-ai" class="ram-ai-anchor">
+        <% if (!ramAiEnabled) { %>
+          <div class="editor-card editor-ram-ai-card is-disabled-panel">
+            <div class="editor-section-head">
+              <span class="editor-section-num"><i class="fa fa-wand-magic-sparkles"></i></span>
+              <h3>Ram AI Helper</h3>
+            </div>
+            <p class="text-secondary small mb-0">
+              Ram AI is off on this server (<code>RAM_AI_ENABLED=false</code>). The editor works fully without it.
+            </p>
+          </div>
+        <% } else { %>
+          <div class="editor-card editor-ram-ai-card">
+            <div class="editor-section-head">
+              <span class="editor-section-num"><i class="fa fa-wand-magic-sparkles"></i></span>
+              <h3>Ram AI Helper</h3>
+            </div>
+            <p class="text-secondary small mb-0">
+              Open the floating <strong>Ram AI</strong> button at the bottom-right of the screen for chat assistance while you edit.
+            </p>
+          </div>
+        <% } %>
+      </section>
+
+      <% if (selectedPack) { %>
+        <script type="application/json" id="ramAiPackSnapshot"><%- JSON.stringify(selectedPack) %></script>
+      <% } %>
+
+      <section class="editor-card" id="section-signpack-selection">
+        <div class="editor-section-head">
+          <span class="editor-section-num">1</span>
+          <h3>Signpack Selection</h3>
+        </div>
+        <div class="row g-4">
+          <div class="col-lg-6" id="section-import-signpack">
+            <form method="POST" action="/signpack/upload" enctype="multipart/form-data">
+              <label class="form-label" for="signpackFile">Upload Existing Signpack <span data-bs-toggle="tooltip" title="ZIP archive with signs.json at the root (Traffic Control signpack format)." class="help-tip">?</span></label>
+              <div class="editor-dropzone" data-editor-dropzone>
+                <input class="editor-file-input" type="file" name="signpackFile" id="signpackFile" accept=".zip,application/zip" required />
+                <div class="editor-dropzone-icon"><i class="fa fa-cloud-arrow-up"></i></div>
+                <p class="editor-dropzone-title">Select a .zip or .json signpack file</p>
+                <p class="editor-dropzone-hint">Drag and drop here, or browse</p>
+                <div class="editor-dropzone-actions">
+                  <button type="button" class="btn btn-sm editor-btn-accent-outline" data-dropzone-browse>Choose File</button>
+                </div>
+                <span class="editor-dropzone-name" data-dropzone-name></span>
+              </div>
+              <button type="submit" class="btn btn-warning btn-sm mt-3"><i class="fa fa-upload me-1"></i> Upload Signpack</button>
+              <% if (selectedPack) { %>
+                <a href="/signpack/multiblock/<%= selectedPack.pack_id %>" class="btn btn-sm editor-btn-ghost mt-3 ms-2">
+                  <i class="fa fa-th me-1"></i> Multi-Block Sign <span data-bs-toggle="tooltip" title="Allows you to create multi-block signs." class="help-tip">?</span>
+                </a>
+              <% } %>
+            </form>
+          </div>
+          <div class="col-lg-6">
+            <label class="form-label" id="packPickerLabel">Select Signpack <span data-bs-toggle="tooltip" title="Choose an existing pack to edit, or Create New to start fresh." class="help-tip">?</span></label>
+            <div class="editor-picker" data-editor-picker>
+              <button type="button" class="editor-picker-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="packPickerLabel">
+                <span class="editor-picker-value <%= !selectedPack ? 'is-create-new' : '' %>"><%= selectedPack ? selectedPack.name : '➕ Create New Signpack' %></span>
+                <span class="editor-picker-chevron" aria-hidden="true"></span>
+              </button>
+              <ul class="editor-picker-list" role="listbox" hidden></ul>
+              <select class="editor-picker-native form-select" onchange="location.href='/signpack?pack=' + this.value" aria-hidden="true" tabindex="-1">
+                <% signpacks.forEach(p => { %>
+                  <option value="<%= p.pack_id %>" <%= selectedPack?.pack_id === p.pack_id ? 'selected' : '' %>><%= p.name %></option>
+                <% }) %>
+                <option value="new" <%= !selectedPack ? 'selected' : '' %>>➕ Create New Signpack</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
 
     <form id="signpackForm"
   method="POST"
   enctype="multipart/form-data"
   action="<%= selectedSign ? ('/signpack/edit/' + selectedPack.pack_id + '/' + selectedSign.id) : ('/signpack/add-to-pack/' + (selectedPack ? selectedPack.pack_id : 'new')) %>">
 
-      <div class="mb-4">
-        <label class="form-label text-black">Select Signpack  <span data-bs-toggle="tooltip" title="Choose an existing pack to edit, or click “Create New” to start a new one." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
-</label>
-        <select class="form-select" onchange="location.href='/signpack?pack=' + this.value">
-          <% signpacks.forEach(p => { %>
-            <option value="<%= p.pack_id %>" <%= selectedPack?.pack_id === p.pack_id ? 'selected' : '' %>><%= p.name %></option>
-          <% }) %>
-          <option value="new" <%= !selectedPack ? 'selected' : '' %>>➕ Create New</option>
-        </select>
-      </div>
-
-      <div class="mb-4">
-        <label class="form-label text-black">Pack Name <span class="text-danger">*</span> <span data-bs-toggle="tooltip" title="What your Sign Pack will be called. This variable will be shown in-game." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
-        <input class="form-control" name="packName" value="<%= selectedPack?.name || '' %>" required />
+      <section class="editor-card" id="section-signpack-details">
+        <div class="editor-section-head">
+          <span class="editor-section-num">2</span>
+          <h3>Signpack Details</h3>
+        </div>
+      <div class="row g-3">
+      <div class="col-md-6 mb-0">
+        <label class="form-label label-with-ram">Pack Name <span class="req-mark">*</span> <span data-bs-toggle="tooltip" title="Required signs.json field: name — shown in-game as the pack title." class="help-tip">?</span><% if (ramAiEnabled) { %><button type="button" class="btn-ram-ai-field" data-ram-ai-field="packName" title="Ask Ram AI" aria-label="Ram AI explain pack name"><i class="fa fa-wand-magic-sparkles"></i></button><% } %></label>
+        <input class="form-control" name="packName" value="<%= selectedPack?.name || '' %>" placeholder="Enter signpack name…" required />
       </div>
 
       <% if (selectedPack && selectedPack.signs.length) { %>
-        <div class="mb-4">
-          <label class="form-label text-black">Edit Sign <span data-bs-toggle="tooltip" title="Choose a sign to edit, or select “New Sign” to add a new one." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
-          <select class="form-select" onchange="updateSignIndex(parseInt(this.value) + 1)">
-
-
-            <option value="">➕ New Sign</option>
+        <div class="col-md-6 mb-0">
+          <label class="form-label" id="signPickerLabel">Edit Sign <span data-bs-toggle="tooltip" title="Choose a sign to edit, or select New Sign to add one." class="help-tip">?</span></label>
+          <div class="editor-picker" data-editor-picker>
+            <button type="button" class="editor-picker-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="signPickerLabel">
+              <span class="editor-picker-value <%= !selectedSign ? 'is-create-new' : '' %>"><%= selectedSign ? selectedSign.name : '➕ New Sign' %></span>
+              <span class="editor-picker-chevron" aria-hidden="true"></span>
+            </button>
+            <ul class="editor-picker-list" role="listbox" hidden></ul>
+            <select class="editor-picker-native form-select" onchange="updateSignIndex(parseInt(this.value) + 1)" aria-hidden="true" tabindex="-1">
+            <option value="" <%= !selectedSign ? 'selected' : '' %>>➕ New Sign</option>
             <% selectedPack.signs.forEach((s, i) => { %>
               <option value="<%= i %>" <%= selectedSign && selectedSign.name === s.name ? 'selected' : '' %>><%= s.name %></option>
             <% }) %>
           </select>
+          </div>
         </div>
       <% } %>
+      </div>
+      </section>
 
-      <div class="mb-4">
-        <label class="form-label text-black">Front Image <% if (!selectedSign || !selectedSign.front) { %><span class="text-danger">*</span><% } %> <span data-bs-toggle="tooltip" title="Refers to the Image for the front of this sign." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
-        <input class="form-control" type="file" name="signs" accept="image/*"  <%= !selectedSign || !selectedSign.front ? 'required' : '' %>  />
+      <section class="editor-card" id="section-images">
+        <div class="editor-section-head">
+          <span class="editor-section-num">3</span>
+          <h3>Images</h3>
+        </div>
+        <div class="row g-4">
+        <div class="col-md-6">
+        <label class="form-label label-with-ram" for="frontImageInput">Front Image <% if (!selectedSign || !selectedSign.front) { %><span class="req-mark">*</span><% } %> <span data-bs-toggle="tooltip" title="Required sign field: front — PNG texture filename. Use square sizes (16×16, 32×32, …)." class="help-tip">?</span><% if (ramAiEnabled) { %><button type="button" class="btn-ram-ai-field" data-ram-ai-field="front" title="Ask Ram AI" aria-label="Ram AI explain front image"><i class="fa fa-wand-magic-sparkles"></i></button><% } %></label>
+        <div class="editor-dropzone" data-editor-dropzone>
+          <input class="editor-file-input" type="file" name="signs" id="frontImageInput" accept="image/png,.png" <%= !selectedSign || !selectedSign.front ? 'required' : '' %> />
+          <div class="editor-dropzone-icon"><i class="fa fa-image"></i></div>
+          <p class="editor-dropzone-title">Upload front image</p>
+          <p class="editor-dropzone-hint">PNG, JPG, WEBP</p>
+          <div class="editor-dropzone-actions">
+            <button type="button" class="btn btn-sm editor-btn-accent-outline" data-dropzone-browse>Choose Image</button>
+          </div>
+          <span class="editor-dropzone-name" data-dropzone-name></span>
+        </div>
         <% if (selectedSign && selectedSign.front && selectedPack) { %>
           <div class="mt-2">
-            <strong class="text-secondary">Current: <span data-bs-toggle="tooltip" title="This is the current front image." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></strong>
+            <strong class="text-secondary">Current: <span data-bs-toggle="tooltip" title="This is the current front image." class="help-tip">?</span></strong>
             <div class="mt-1">
               <img src="/users/<%= user.username %>/packs/<%= selectedPack.pack_id %>/<%= selectedSign.type %>/<%= selectedSign.front %>" style="width: 80px; cursor: pointer" class="border rounded shadow-sm" />
             </div>
           </div>
         <% } %>
-      </div>
+        </div>
 
-      <div class="mb-4">
-        <label class="form-label text-black">Back Image <span data-bs-toggle="tooltip" title="Refers to the Image for the back of this sign. You Can select a exsisting one below." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
-        <input class="form-control mb-2" type="file" name="back" accept="image/*" id="backImageInput" />
+        <div class="col-md-6">
+        <label class="form-label label-with-ram" for="backImageInput">Back Image <span data-bs-toggle="tooltip" title="Optional sign field: back — PNG filename; defaults to back.png if omitted. Reuse an existing back below or upload PNG." class="help-tip">?</span><% if (ramAiEnabled) { %><button type="button" class="btn-ram-ai-field" data-ram-ai-field="back" title="Ask Ram AI" aria-label="Ram AI explain back image"><i class="fa fa-wand-magic-sparkles"></i></button><% } %></label>
+        <div class="editor-dropzone" data-editor-dropzone>
+          <input class="editor-file-input" type="file" name="back" accept="image/png,.png" id="backImageInput" />
+          <div class="editor-dropzone-icon"><i class="fa fa-image"></i></div>
+          <p class="editor-dropzone-title">Upload back image</p>
+          <p class="editor-dropzone-hint">PNG, JPG, WEBP — or pick existing below</p>
+          <div class="editor-dropzone-actions">
+            <button type="button" class="btn btn-sm editor-btn-accent-outline" data-dropzone-browse>Choose Image</button>
+          </div>
+          <span class="editor-dropzone-name" data-dropzone-name></span>
+        </div>
         <img id="backImagePreview" src="#" alt="Back Image Preview" style="width: 80px; display: none;" class="border rounded shadow-sm mt-2" />
         <% if (selectedSign && selectedSign.back) { %>
           <div class="mt-2">
-            <strong class="text-secondary">Current Back: <span data-bs-toggle="tooltip" title="The current back being used." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></strong>
+            <strong class="text-secondary">Current Back: <span data-bs-toggle="tooltip" title="The current back being used." class="help-tip">?</span></strong>
             <div class="mt-1">
               <img
                 src="/users/<%= user.username %>/packs/<%= selectedPack.pack_id %>/<%= selectedSign.type %>/<%= selectedSign.back %>"
@@ -531,7 +637,10 @@
           </div>
           <input type="hidden" name="existingBack" id="selectedBackImage" />
         <% } %>
-      </div>
+        </div>
+        </div>
+        <p class="editor-image-note mb-0"><i class="fa fa-circle-info"></i> Traffic Control expects <strong>PNG</strong> textures with <strong>square</strong> dimensions (e.g. 16×16, 32×32, 64×64).</p>
+      </section>
       
       <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -583,25 +692,28 @@
         
         
       </script>
-      
-      
 
-      <div class="mb-4">
-        <label class="form-label text-black">Sign Name <span class="text-danger">*</span> <span data-bs-toggle="tooltip" title="	Name of your sign. This is what will be presented in-game." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
-        <input class="form-control" name="signstext" id="signText" required />
+      <section class="editor-card" id="section-sign-fields">
+        <div class="editor-section-head">
+          <span class="editor-section-num">4</span>
+          <h3>Sign &amp; Formatting</h3>
+        </div>
+      <div class="mb-3">
+        <label class="form-label label-with-ram">Sign Name <span class="req-mark">*</span> <span data-bs-toggle="tooltip" title="Required signs.json field: name — label shown in-game for this sign." class="help-tip">?</span><% if (ramAiEnabled) { %><button type="button" class="btn-ram-ai-field" data-ram-ai-field="signText" title="Ask Ram AI" aria-label="Ram AI explain sign name"><i class="fa fa-wand-magic-sparkles"></i></button><% } %></label>
+        <input class="form-control" name="signstext" id="signText" placeholder="Enter sign name…" required />
       </div>
 
      
       
 
       <div class="mb-4">
-        <label class="form-label text-black">Sign Type Folder <% if (!selectedSign || !selectedSign.type) { %><span class="text-danger">*</span><% } %> <span data-bs-toggle="tooltip" title="What folder should the pack put this sign in (Done for you on export) example road_signs." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <label class="form-label label-with-ram">Sign Type Folder <% if (!selectedSign || !selectedSign.type) { %><span class="req-mark">*</span><% } %> <span data-bs-toggle="tooltip" title="Required sign field: type — folder name in the ZIP. Defaults include circle, diamond, misc, rectangle, square, triangle." class="help-tip">?</span><% if (ramAiEnabled) { %><button type="button" class="btn-ram-ai-field" data-ram-ai-field="signtype_folder" title="Ask Ram AI" aria-label="Ram AI explain sign type"><i class="fa fa-wand-magic-sparkles"></i></button><% } %></label>
         <input class="form-control mb-2" name="signtype_folder" id="signtype_folder"
           placeholder="e.g. useful_road" value="<%= selectedSign?.type || '' %>" list="folderList" <%= !selectedSign || !selectedSign.type ? 'required' : '' %> />
       </div>
       
       <div class="mb-4">
-        <label class="form-label text-black">Sign Type Display Name <% if (!selectedSign || !selectedSign.type) { %><span class="text-danger">*</span><% } %> <span data-bs-toggle="tooltip" title="The Catagory name Example Road Signs." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <label class="form-label label-with-ram">Sign Type Display Name <% if (!selectedSign || !selectedSign.type) { %><span class="req-mark">*</span><% } %> <span data-bs-toggle="tooltip" title="Optional pack types map: folder name → in-game category label (e.g. Road Signs)." class="help-tip">?</span><% if (ramAiEnabled) { %><button type="button" class="btn-ram-ai-field" data-ram-ai-field="signtype_label" title="Ask Ram AI" aria-label="Ram AI explain type label"><i class="fa fa-wand-magic-sparkles"></i></button><% } %></label>
         <input class="form-control mb-2" name="signtype_label" id="signtype_label"
           placeholder="e.g. Road Signs" value="<%= selectedPack?.types?.[selectedSign?.type] || '' %>" list="labelList" <%= !selectedSign || !selectedSign.type ? 'required' : '' %>  />
       </div>
@@ -648,20 +760,20 @@
       </script>
       
       <div class="mb-4">
-        <label class="form-label text-black">Sign Tooltip  <span data-bs-toggle="tooltip" title="	Gives Users help on what the sign is for" style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <label class="form-label label-with-ram">Sign Tooltip  <span data-bs-toggle="tooltip" title="Optional sign field: tooltip — short in-game help text for this sign." class="help-tip">?</span><% if (ramAiEnabled) { %><button type="button" class="btn-ram-ai-field" data-ram-ai-field="signTool" title="Ask Ram AI" aria-label="Ram AI explain tooltip"><i class="fa fa-wand-magic-sparkles"></i></button><% } %></label>
         <input class="form-control"  name="signstool"  id="signTool" />
       </div>
       
       <div class="mb-4">
         <div class="form-check">
-          <input style="background-color: black;" class="form-check-input" type="checkbox" name="halfheight" id="halfheight">
-          <label class="form-check-label text-black"  for="halfheight">halfheight <span data-bs-toggle="tooltip" title="Rather or not this sign is half the hight of a normal sign usally just the bottom half." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+          <input class="form-check-input" type="checkbox" name="halfheight" id="halfheight">
+          <label class="form-check-label label-with-ram" for="halfheight">halfheight <span data-bs-toggle="tooltip" title="Optional sign field: halfheight — sign uses half the normal height (often bottom half)." class="help-tip">?</span><% if (ramAiEnabled) { %><button type="button" class="btn-ram-ai-field" data-ram-ai-field="halfheight" title="Ask Ram AI" aria-label="Ram AI explain halfheight"><i class="fa fa-wand-magic-sparkles"></i></button><% } %></label>
         </div>
         
       </div>
 
       <div class="mb-4">
-        <label class="form-label text-black">Sign Preview <span data-bs-toggle="tooltip" title="A Live Preview of the signs front usefull with textlines." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+        <label class="form-label">Sign Preview <span data-bs-toggle="tooltip" title="A Live Preview of the signs front usefull with textlines." class="help-tip">?</span></label>
         <br/>
         <div id="signPreviewContainer" style="position: relative; display: inline-block;">
           <% if (selectedSign && selectedSign.front && selectedPack) { %>
@@ -671,39 +783,43 @@
           <% } %>
         </div>
       </div>
-      
+      </section>
 
-      <div class="mb-4">
-        <label class="form-label text-black">Textlines <span data-bs-toggle="tooltip" title="Manage TextLines of a sign." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+      <section class="editor-card" id="section-textlines">
+        <div class="editor-section-head">
+          <span class="editor-section-num">5</span>
+          <h3>Text Lines</h3>
+        </div>
+        <label class="form-label label-with-ram">Textlines <span data-bs-toggle="tooltip" title="Optional sign textlines array — positions on a 16×16 grid (label, x, y, width, color required per line)." class="help-tip">?</span><% if (ramAiEnabled) { %><button type="button" class="btn-ram-ai-field" data-ram-ai-field="textlines" title="Ask Ram AI" aria-label="Ram AI explain textlines"><i class="fa fa-wand-magic-sparkles"></i></button><% } %></label>
         <div id="textlinesContainer"></div>
-        <button type="button" class="btn btn-outline-primary mt-2" onclick="addTextline()">+ Add Textline <span data-bs-toggle="tooltip" title="Adds A new text line." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></button>
-      </div>
+        <button type="button" class="btn btn-outline-warning btn-sm mt-2" onclick="addTextline()">+ Add Textline <span data-bs-toggle="tooltip" title="Adds A new text line." class="help-tip">?</span></button>
+      </section>
 
-      <div class="d-flex flex-wrap gap-2">
-        <button class="btn btn-warning fw-bold"><i class="fa fa-plus me-1"></i>Save Sign <span data-bs-toggle="tooltip" title="Saves the new sign to the json file." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></button>
+      <section class="editor-card" id="section-export">
+        <div class="editor-section-head">
+          <span class="editor-section-num">6</span>
+          <h3>Export / Save</h3>
+        </div>
+      <div class="editor-actions-row">
+        <button class="btn btn-warning fw-bold"><i class="fa fa-plus me-1"></i>Save Sign <span data-bs-toggle="tooltip" title="Saves the new sign to the json file." class="help-tip">?</span></button>
       
         
 
         <% if (selectedPack) { %>
-          <a href="#" onclick="downloadAndReload('<%= selectedPack.pack_id %>')" class="btn btn-warning">Export Signpack <span data-bs-toggle="tooltip" title="Exports the PAck to your computer." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></a>
-          <a href="#" onclick="removeAndReload('<%= selectedPack.pack_id %>')" class="btn btn-danger">Delete Signpack <span data-bs-toggle="tooltip" title="Deletes the pack from the websites files (DANAGER this cant be undone)." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></a>
-          <button class="btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#jsonModal">Preview JSON <span data-bs-toggle="tooltip" title="Have a look at the generated json file." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></button>
+          <a href="#" onclick="downloadAndReload('<%= selectedPack.pack_id %>')" class="btn btn-warning">Export Signpack <span data-bs-toggle="tooltip" title="Downloads a ZIP with signs.json and PNGs. Install to .minecraft/tc_signpacks and reload with F3 + ]." class="help-tip">?</span></a>
+          <a href="#" onclick="removeAndReload('<%= selectedPack.pack_id %>')" class="btn btn-danger">Delete Signpack <span data-bs-toggle="tooltip" title="Deletes the pack from the websites files (DANAGER this cant be undone)." class="help-tip">?</span></a>
+          <button class="btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#jsonModal">Preview JSON <span data-bs-toggle="tooltip" title="Have a look at the generated json file." class="help-tip">?</span></button>
         <% } %>
       </div>
+      </section>
     </form>
     <% if (selectedSign) { %>
       <form action="/signpack/delete/<%= selectedPack.pack_id %>/<%= selectedSign.id %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this sign?');" class="d-inline">
         <button class="btn btn-danger fw-bold">
-          <i class="fa fa-trash me-1"></i>Delete Sign <span data-bs-toggle="tooltip" title="Remove the Sign from the pack." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span>
+          <i class="fa fa-trash me-1"></i>Delete Sign <span data-bs-toggle="tooltip" title="Remove the Sign from the pack." class="help-tip">?</span>
         </button>
       </form>
     <% } %>
-   
-    
- 
-    
-  </div>
-</section>
 
 <% if (selectedPack) { %>
   <div class="modal fade" id="jsonModal" tabindex="-1" aria-labelledby="jsonModalLabel" aria-hidden="true">
@@ -722,15 +838,19 @@
 <% } %>
 
 <iframe id="downloadFrame" style="display: none;"></iframe>
+
 <% if (selectedPack && selectedPack.signs.length) { %>
-  <p class="text-dark mt-2">Total Signs: <strong><%= selectedPack.signs.length %></strong> <span data-bs-toggle="tooltip" title="The Total amount of signs in the pack." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></p>
- 
-  <div class="mb-4">
-   
-    <label class="form-label text-black">Reorder Signs <span data-bs-toggle="tooltip" title="Allows to download or reorder signs in the pack to manage how its seen in game." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></label>
+  <section class="editor-card editor-reorder-panel" id="section-reorder">
+    <div class="editor-section-head">
+      <span class="editor-section-num">7</span>
+      <h3>Reorder Signs</h3>
+    </div>
+    <p class="mb-3">Total Signs: <strong><%= selectedPack.signs.length %></strong> <span data-bs-toggle="tooltip" title="The Total amount of signs in the pack." class="help-tip">?</span></p>
+    <div class="mb-4">
+    <label class="form-label">Drag or use cut mode <span data-bs-toggle="tooltip" title="Allows to download or reorder signs in the pack to manage how its seen in game." class="help-tip">?</span></label>
     <br/>
-    <button id="cutModeBtn" class="btn btn-secondary btn-sm mt-3" onclick="toggleCutMode()">✂️ Enter Cut Mode <span data-bs-toggle="tooltip" title="Reorder the signs easier but  selecting multiple at a time." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></button>
-  <button class="btn btn-secondary btn-sm mt-3" onclick="saveOrder()"><i class="fa fa-save me-1"></i>Save Order <span data-bs-toggle="tooltip" title="Saves the new order of the signs after you reorder." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></button>
+    <button id="cutModeBtn" class="btn btn-secondary btn-sm mt-3" onclick="toggleCutMode()">✂️ Enter Cut Mode <span data-bs-toggle="tooltip" title="Reorder the signs easier but  selecting multiple at a time." class="help-tip">?</span></button>
+  <button class="btn btn-secondary btn-sm mt-3" onclick="saveOrder()"><i class="fa fa-save me-1"></i>Save Order <span data-bs-toggle="tooltip" title="Saves the new order of the signs after you reorder." class="help-tip">?</span></button>
  
   <br/>
   <br/>
@@ -753,8 +873,207 @@
       <% }) %>
     </div>
     
-   
-  </div>
+  </section>
+<% } %>
+
+    </div><!-- .editor-content -->
+  </div><!-- .editor-body -->
+</div><!-- .editor-shell -->
+
+<% if (ramAiEnabled) { %>
+  <button type="button" id="ramAiLauncherBtn" class="ram-ai-launcher" aria-label="Open Ram AI assistant" aria-expanded="false" aria-controls="ramAiDrawer">
+    <span class="ram-ai-launcher-glow" aria-hidden="true"></span>
+    <img class="ram-ai-launcher-logo" src="https://ai.rambot.xyz/static/logo.png" alt="" width="28" height="28" />
+    <span class="ram-ai-launcher-label">Ram AI</span>
+    <span id="ramAiLauncherBadge" class="ram-ai-launcher-badge" hidden></span>
+    <span id="ramAiLauncherQueueBadge" class="ram-ai-launcher-queue-badge" hidden></span>
+  </button>
+
+  <div id="ramAiToast" class="ram-ai-toast" hidden role="status"></div>
+  <div id="ramAiBackdrop" class="ram-ai-backdrop" hidden></div>
+
+  <aside id="ramAiDrawer" class="ram-ai-drawer" aria-hidden="true" aria-label="Ram AI chat assistant">
+    <header class="ram-ai-drawer-head">
+      <div class="ram-ai-title-wrap">
+        <img class="ram-ai-head-logo" src="https://ai.rambot.xyz/static/logo.png" alt="" width="24" height="24" />
+        <div>
+          <h3>Ram AI Assistant</h3>
+          <div class="ram-ai-head-meta">
+            <span id="ramAiIdleStatus" class="ram-ai-status-badge ram-ai-status-available">Available</span>
+            <span id="ramAiInlineQueueChip" class="ram-ai-inline-queue-chip" hidden></span>
+          </div>
+        </div>
+      </div>
+      <div class="ram-ai-head-actions">
+        <label class="ram-ai-model-label" for="ramAiModelSelect">Model</label>
+        <select class="form-select form-select-sm ram-ai-model-select" id="ramAiModelSelect" aria-label="AI Model">
+          <option value="Ram AI Code Agent 1.0 - fast">Ram AI Code Agent 1.0 - fast</option>
+        </select>
+        <button type="button" class="ram-ai-icon-btn" id="ramAiCloseBtn" aria-label="Close AI chat">
+          <i class="fa fa-chevron-down"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="ram-ai-drawer-body">
+      <div id="ramAiChatMessages" class="ram-ai-chat-messages" aria-live="polite">
+        <div class="ram-ai-empty">
+          <p>Hi — I can help with Traffic Control signpacks.</p>
+          <p class="text-secondary small mb-0">Nothing is sent until you send a message or click a quick action.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="ram-ai-footer">
+      <div id="ramAiQueueStatus" class="ram-ai-footer-status" hidden aria-live="polite"></div>
+      <div id="ramAiTypingRow" class="ram-ai-typing-row" hidden aria-live="polite">
+        <span class="ram-ai-typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span id="ramAiTypingLabel" class="ram-ai-typing-label">Generating…</span>
+        <button type="button" class="ram-ai-stop-link" id="ramAiCancelBtn" hidden>Stop</button>
+      </div>
+
+      <div class="ram-ai-footer-section ram-ai-quick-wrap">
+        <div class="ram-ai-footer-label">Quick actions</div>
+        <div class="ram-ai-quick-chips">
+          <button type="button" class="ram-ai-chip" data-ram-ai-action="validate_json">Review signs.json</button>
+          <button type="button" class="ram-ai-chip" data-ram-ai-action="explain_selected">Explain field</button>
+          <button type="button" class="ram-ai-chip" data-ram-ai-action="help_textlines">Textlines</button>
+          <button type="button" class="ram-ai-chip" data-ram-ai-action="convert_color">Color</button>
+          <button type="button" class="ram-ai-chip" data-ram-ai-action="generate_readme">README</button>
+          <button type="button" class="ram-ai-chip" data-ram-ai-action="suggest_tooltip">Tooltip</button>
+        </div>
+      </div>
+
+      <details class="ram-ai-footer-section ram-ai-context-details">
+        <summary class="ram-ai-footer-label">Context <span class="ram-ai-footer-hint">optional</span></summary>
+        <div class="ram-ai-context-box">
+          <p id="ramAiPayloadHint" class="ram-ai-payload-hint" role="status" aria-live="polite"></p>
+          <p id="ramAiMetaFeedback" class="ram-ai-meta-feedback small text-secondary mb-2" aria-live="polite" hidden></p>
+          <div class="ram-ai-context-opts">
+            <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxPackName" /> Include pack name</label>
+            <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxSignMeta" checked /> Selected sign only</label>
+            <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxTextlines" checked /> Textlines</label>
+            <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxPackSummary" checked /> signs.json summary</label>
+            <label class="ram-ai-context-opt"><input type="checkbox" id="ramAiCtxPackJson" /> Full signs.json preview</label>
+          </div>
+          <div class="ram-ai-context-row">
+            <select class="form-select form-select-sm" id="ramAiFieldSelect" aria-label="Field to explain">
+              <option value="packName">Pack name</option>
+              <option value="signText">Sign name</option>
+              <option value="signtype_folder">Sign type folder</option>
+              <option value="textlines">Textlines</option>
+              <option value="signTool">Tooltip</option>
+              <option value="front">Front texture</option>
+              <option value="color">Textline color</option>
+            </select>
+            <input type="text" class="form-control form-control-sm" id="ramAiColorInput" placeholder="#FF0000" maxlength="64" autocomplete="off" />
+          </div>
+          <button type="button" class="ram-ai-text-btn" id="ramAiClearPromptBtn">Clear prompt</button>
+        </div>
+      </details>
+
+      <div class="ram-ai-footer-section ram-ai-composer-block">
+        <label class="ram-ai-footer-label" for="ramAiCustomPrompt">Message</label>
+        <div class="ram-ai-composer-shell">
+          <textarea id="ramAiCustomPrompt" class="form-control ram-ai-composer" rows="2" maxlength="2000" placeholder="Ask Ram AI about your signpack…"></textarea>
+          <button type="button" class="ram-ai-send-btn" data-ram-ai-action="ask_quick" aria-label="Send message">
+            <i class="fa fa-paper-plane"></i>
+          </button>
+        </div>
+        <p class="ram-ai-composer-hint"><kbd>Enter</kbd> send · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line</p>
+      </div>
+
+      <div id="ramAiResponseTools" class="ram-ai-footer-section ram-ai-controls-row" hidden>
+        <div class="ram-ai-controls-group">
+          <button type="button" class="ram-ai-ctrl ram-ai-ctrl-primary" id="ramAiFollowUpBtn">
+            <i class="fa fa-reply" aria-hidden="true"></i><span>Follow-up</span>
+          </button>
+        </div>
+        <div class="ram-ai-controls-group">
+          <button type="button" class="ram-ai-ctrl ram-ai-ctrl-secondary" id="ramAiCopyBtn">
+            <i class="fa fa-copy" aria-hidden="true"></i><span>Copy</span>
+          </button>
+          <button type="button" class="ram-ai-ctrl ram-ai-ctrl-secondary" id="ramAiRetryBtn">
+            <i class="fa fa-rotate-right" aria-hidden="true"></i><span>Retry</span>
+          </button>
+          <button type="button" class="ram-ai-ctrl ram-ai-ctrl-secondary" id="ramAiInsertTooltipBtn">
+            <i class="fa fa-input-text" aria-hidden="true"></i><span>Insert tooltip</span>
+          </button>
+        </div>
+        <div class="ram-ai-controls-group ram-ai-controls-group-end">
+          <button type="button" class="ram-ai-ctrl ram-ai-ctrl-muted" id="ramAiClearResponseBtn">
+            <i class="fa fa-eraser" aria-hidden="true"></i><span>Clear chat</span>
+          </button>
+        </div>
+      </div>
+    </footer>
+  </aside>
+  <script>
+    (function () {
+      function applyRamAiDrawerOpen(open) {
+        var drawer = document.getElementById("ramAiDrawer");
+        var backdrop = document.getElementById("ramAiBackdrop");
+        var launcher = document.getElementById("ramAiLauncherBtn");
+        if (!drawer || !launcher) return false;
+        var wantOpen = typeof open === "boolean" ? open : !drawer.classList.contains("is-open");
+        drawer.classList.toggle("is-open", wantOpen);
+        drawer.setAttribute("aria-hidden", wantOpen ? "false" : "true");
+        launcher.setAttribute("aria-expanded", wantOpen ? "true" : "false");
+        launcher.classList.toggle("is-drawer-open", wantOpen);
+        if (backdrop) backdrop.hidden = !wantOpen;
+        if (wantOpen) {
+          var composer = document.getElementById("ramAiCustomPrompt");
+          if (composer) composer.focus();
+        }
+        return wantOpen;
+      }
+      window.toggleRamAiDrawer = applyRamAiDrawerOpen;
+
+      function bindRamAiDrawerFallback() {
+        var launcher = document.getElementById("ramAiLauncherBtn");
+        var closeBtn = document.getElementById("ramAiCloseBtn");
+        var backdrop = document.getElementById("ramAiBackdrop");
+        if (launcher && !launcher.dataset.ramAiFallbackBound) {
+          launcher.dataset.ramAiFallbackBound = "1";
+          launcher.addEventListener("click", function (e) {
+            if (window.__ramAiHelperReady) return;
+            e.preventDefault();
+            applyRamAiDrawerOpen();
+          });
+        }
+        if (closeBtn && !closeBtn.dataset.ramAiFallbackBound) {
+          closeBtn.dataset.ramAiFallbackBound = "1";
+          closeBtn.addEventListener("click", function () {
+            if (window.__ramAiHelperReady) return;
+            applyRamAiDrawerOpen(false);
+          });
+        }
+        if (backdrop && !backdrop.dataset.ramAiFallbackBound) {
+          backdrop.dataset.ramAiFallbackBound = "1";
+          backdrop.addEventListener("click", function () {
+            if (window.__ramAiHelperReady) return;
+            applyRamAiDrawerOpen(false);
+          });
+        }
+        if (!window.__ramAiEscapeBound) {
+          window.__ramAiEscapeBound = true;
+          document.addEventListener("keydown", function (e) {
+            if (e.key !== "Escape") return;
+            var drawer = document.getElementById("ramAiDrawer");
+            if (!drawer || !drawer.classList.contains("is-open")) return;
+            if (window.__ramAiHelperReady) return;
+            applyRamAiDrawerOpen(false);
+          });
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bindRamAiDrawerFallback);
+      } else {
+        bindRamAiDrawerFallback();
+      }
+    })();
+  </script>
 <% } %>
 
 <script>
@@ -780,9 +1099,9 @@ document.addEventListener('DOMContentLoaded', () => {
   menu.style.display = 'none';
   menu.style.fontSize = '0.9rem';
   menu.innerHTML = `
-  <div id="contextSelect" style="padding: 4px 8px; cursor: pointer;">🔍 Select This Sign <span data-bs-toggle="tooltip" title="Select This Sign." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></div>
-  <div id="contextCut" style="padding: 4px 8px; cursor: pointer;">✂️ Cut for Reorder <span data-bs-toggle="tooltip" title="Add this to a multiple sign move operation." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></div>
-  <div id="contextSave" style="padding: 4px 8px; cursor: pointer;">💾 Download Image <span data-bs-toggle="tooltip" title="Download This front image for the sign." style="cursor: help; color: #0dcaf0; font-weight: bold;">?</span></div>
+  <div id="contextSelect" style="padding: 4px 8px; cursor: pointer;">🔍 Select This Sign <span data-bs-toggle="tooltip" title="Select This Sign." class="help-tip">?</span></div>
+  <div id="contextCut" style="padding: 4px 8px; cursor: pointer;">✂️ Cut for Reorder <span data-bs-toggle="tooltip" title="Add this to a multiple sign move operation." class="help-tip">?</span></div>
+  <div id="contextSave" style="padding: 4px 8px; cursor: pointer;">💾 Download Image <span data-bs-toggle="tooltip" title="Download This front image for the sign." class="help-tip">?</span></div>
 `;
 
 document.addEventListener('click', () => {
@@ -1206,5 +1525,9 @@ document.addEventListener('click', async (e) => {
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/site-links.js"></script>
+<script src="/js/editor-ui.js"></script>
+<script src="/js/ram-ai-markdown.js"></script>
+<script src="/js/ram-ai-helper.js"></script>
 </body>
 </html>

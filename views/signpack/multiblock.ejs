@@ -2,54 +2,731 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Create Multi-Block Sign | Signpack Maker</title>
+  <title>Create Multi-Block Sign Studio | Signpack Maker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/brand.css" />
+  <style>
+    :root {
+      --studio-bg: #0f1319;
+      --studio-surface: #171c24;
+      --studio-surface-2: #1f2631;
+      --studio-border: rgba(255, 196, 86, 0.2);
+      --studio-accent: #ffb347;
+      --studio-accent-2: #ff8f2f;
+      --studio-text: #ebeff4;
+      --studio-muted: #9aa7b8;
+      --studio-success: #67d092;
+      --studio-warn: #ffc76a;
+      --studio-danger: #ff8a9a;
+    }
+
+    body {
+      background: radial-gradient(circle at top right, #202833 0%, var(--studio-bg) 45%);
+      color: var(--studio-text);
+      min-height: 100vh;
+      font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+
+    .studio-wrap {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 2rem;
+    }
+
+    .studio-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .studio-title h1 {
+      margin: 0;
+      color: var(--studio-accent);
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .studio-title p {
+      margin: 0.25rem 0 0;
+      color: var(--studio-muted);
+      font-size: 0.88rem;
+    }
+
+    .studio-brand-block {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .studio-brand-block .spm-brand-title {
+      font-size: 1.02rem;
+    }
+
+    .studio-note {
+      margin: 0.8rem 0 1rem;
+      border: 1px solid rgba(255, 179, 71, 0.35);
+      background: rgba(255, 179, 71, 0.14);
+      color: #ffe6bf;
+      border-radius: 10px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.8rem;
+    }
+
+    .studio-stepbar {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .studio-step {
+      border: 1px solid rgba(255,255,255,0.09);
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      padding: 0.55rem 0.6rem;
+      min-height: 52px;
+      transition: all 0.2s ease;
+    }
+
+    .studio-step.is-active {
+      border-color: var(--studio-border);
+      background: rgba(255, 179, 71, 0.11);
+      box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.1) inset;
+    }
+
+    .studio-step.is-done {
+      border-color: rgba(103, 208, 146, 0.32);
+      background: rgba(103, 208, 146, 0.1);
+    }
+
+    .studio-step small {
+      display: block;
+      color: var(--studio-muted);
+      font-size: 0.67rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .studio-step strong {
+      font-size: 0.79rem;
+      line-height: 1.2;
+      display: block;
+    }
+
+    .studio-grid {
+      display: grid;
+      grid-template-columns: minmax(360px, 520px) minmax(420px, 1fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .studio-card {
+      background: linear-gradient(180deg, rgba(26, 33, 43, 0.95), rgba(19, 24, 32, 0.96));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 0.95rem;
+    }
+
+    .studio-card + .studio-card {
+      margin-top: 0.8rem;
+    }
+
+    .studio-card h3 {
+      font-size: 0.92rem;
+      margin: 0;
+      color: #ffe2b3;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .studio-sub {
+      color: var(--studio-muted);
+      font-size: 0.74rem;
+      margin-top: 0.32rem;
+      margin-bottom: 0.72rem;
+    }
+
+    .studio-dropzone {
+      border: 1px dashed rgba(255, 179, 71, 0.45);
+      border-radius: 12px;
+      padding: 0.9rem;
+      background: rgba(255, 179, 71, 0.07);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .studio-dropzone.is-dragover {
+      border-color: var(--studio-accent);
+      background: rgba(255, 179, 71, 0.14);
+    }
+
+    .studio-dropzone strong {
+      display: block;
+      font-size: 0.86rem;
+    }
+
+    .studio-dropzone small {
+      display: block;
+      color: var(--studio-muted);
+      margin-top: 0.25rem;
+      font-size: 0.72rem;
+    }
+
+    .studio-file-meta {
+      margin-top: 0.65rem;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+
+    .studio-meta-pill {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 0.35rem 0.45rem;
+      background: rgba(255,255,255,0.03);
+      font-size: 0.69rem;
+      color: #cdd7e4;
+    }
+
+    .studio-meta-pill strong {
+      display: block;
+      color: #fff;
+      font-size: 0.74rem;
+    }
+
+    .studio-warnings {
+      margin-top: 0.6rem;
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .studio-warning {
+      border-radius: 8px;
+      font-size: 0.73rem;
+      padding: 0.44rem 0.55rem;
+      border: 1px solid transparent;
+    }
+
+    .studio-warning.warn {
+      background: rgba(255, 199, 106, 0.1);
+      border-color: rgba(255, 199, 106, 0.35);
+      color: #ffdca6;
+    }
+
+    .studio-warning.info {
+      background: rgba(103, 152, 255, 0.1);
+      border-color: rgba(103, 152, 255, 0.28);
+      color: #c8daff;
+    }
+
+    .studio-warning.good {
+      background: rgba(103, 208, 146, 0.1);
+      border-color: rgba(103, 208, 146, 0.28);
+      color: #b8f2cf;
+    }
+
+    .studio-preview-wrap {
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      background: var(--studio-surface);
+      overflow: hidden;
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem;
+    }
+
+    .studio-preview-wrap img {
+      width: 100%;
+      height: auto;
+      max-height: 70vh;
+      object-fit: contain;
+      border-radius: 8px;
+      display: block;
+    }
+
+    .studio-grid-overlay {
+      position: absolute;
+      inset: 0.6rem;
+      pointer-events: none;
+      display: grid;
+      z-index: 5;
+    }
+
+    .studio-tile {
+      border: 1px solid rgba(255, 179, 71, 0.55);
+      background: rgba(255, 179, 71, 0.08);
+      position: relative;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .studio-tile:hover,
+    .studio-tile.is-active {
+      background: rgba(255, 179, 71, 0.2);
+      box-shadow: inset 0 0 0 1px rgba(255, 214, 160, 0.55);
+    }
+
+    .studio-tile-label {
+      position: absolute;
+      top: 0.22rem;
+      left: 0.24rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #fff3db;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+      pointer-events: none;
+    }
+
+    .studio-preview-empty {
+      color: var(--studio-muted);
+      font-size: 0.84rem;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .studio-side-meta {
+      margin-top: 0.75rem;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+
+    .studio-mini {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 0.35rem 0.45rem;
+      background: rgba(255,255,255,0.03);
+      font-size: 0.7rem;
+      color: #c8d3e3;
+    }
+
+    .studio-mini strong {
+      display: block;
+      color: #fff;
+      font-size: 0.75rem;
+    }
+
+    .studio-export-panel {
+      border: 1px solid rgba(255, 179, 71, 0.22);
+      border-radius: 10px;
+      padding: 0.65rem 0.7rem;
+      background: rgba(255, 179, 71, 0.06);
+    }
+
+    .studio-export-title {
+      margin: 0 0 0.45rem;
+      font-size: 0.8rem;
+      color: #ffe2b3;
+      font-weight: 600;
+    }
+
+    .studio-export-hint {
+      font-size: 0.68rem;
+      color: var(--studio-muted);
+      margin-top: 0.35rem;
+    }
+
+    .studio-result {
+      margin-top: 0.8rem;
+      border: 1px solid rgba(103, 208, 146, 0.32);
+      background: rgba(103, 208, 146, 0.1);
+      border-radius: 10px;
+      padding: 0.65rem 0.75rem;
+      font-size: 0.76rem;
+      color: #d8f5e4;
+    }
+
+    .studio-thumb-grid {
+      margin-top: 0.65rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 0.42rem;
+      max-height: 220px;
+      overflow: auto;
+      padding-right: 0.2rem;
+    }
+
+    .studio-thumb {
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      overflow: hidden;
+      font-size: 0.63rem;
+    }
+
+    .studio-thumb img {
+      width: 100%;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .studio-thumb small {
+      display: block;
+      padding: 0.28rem 0.34rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #c6d2e2;
+    }
+
+    .studio-sticky-actions {
+      position: sticky;
+      bottom: 0.6rem;
+      margin-top: 0.8rem;
+      z-index: 10;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(12, 15, 20, 0.92);
+      backdrop-filter: blur(6px);
+      border-radius: 12px;
+      padding: 0.6rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .studio-progress {
+      font-size: 0.74rem;
+      color: var(--studio-muted);
+      min-width: 200px;
+    }
+
+    .studio-progress strong {
+      color: #fff;
+      display: block;
+      font-size: 0.8rem;
+    }
+
+    .studio-help-grid {
+      margin-top: 0.8rem;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.55rem;
+    }
+
+    .studio-help-card {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 0.56rem 0.62rem;
+      background: rgba(255,255,255,0.03);
+      font-size: 0.73rem;
+      color: #c5d0df;
+    }
+
+    .studio-help-card h4 {
+      margin: 0 0 0.3rem;
+      font-size: 0.78rem;
+      color: #ffe2b3;
+    }
+
+    .studio-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .studio-row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .studio-ai-tip {
+      margin-top: 0.55rem;
+      border: 1px solid rgba(255, 179, 71, 0.28);
+      border-radius: 9px;
+      background: rgba(255, 179, 71, 0.08);
+      padding: 0.5rem;
+      font-size: 0.72rem;
+      color: #ffe1bb;
+    }
+
+    .studio-status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 0.35rem;
+      background: var(--studio-warn);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .45; transform: scale(.8); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+
+    @media (max-width: 1200px) {
+      .studio-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .studio-preview-wrap {
+        min-height: 360px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .studio-stepbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .studio-row,
+      .studio-row-3,
+      .studio-help-grid,
+      .studio-file-meta,
+      .studio-side-meta {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
-<body class="bg-dark text-light">
-  <div class="container py-5">
-    <h1 class="text-warning">Create Multi-Block Sign</h1>
-     <!-- 🔔 Separated warning notice -->
-  <div class="alert alert-warning text-dark small mt-2" role="alert">
-    ⚠️ Multi-block sign generation is experimental. Tile splitting and back generation may not align perfectly with in-game appearance.
-  </div>
-
-  <form id="fragmentForm" class="row g-3">
-    <div class="col-md-4">
-      <label class="form-label">
-        Upload Front Image <small class="text-white">(back will be auto-generated)</small>
-      </label>
-      <input type="file" accept="image/*" class="form-control" required id="largeSign" />
+<body>
+  <div class="studio-wrap">
+    <div class="studio-head">
+      <div class="studio-title">
+        <div class="studio-brand-block">
+          <%- include('../partials/brand', { brandHref: '/', brandClass: 'spm-brand--compact', brandTitleTag: 'span' }) %>
+        </div>
+        <h1 class="mt-2"><i class="fa fa-puzzle-piece"></i> Multi-Block Sign Studio</h1>
+        <p>Guided builder for fragmenting one image into coordinated Traffic Control sign tiles.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="/signpack?pack=<%= packId %>" class="btn btn-sm btn-outline-light"><i class="fa fa-arrow-left"></i> Back to Pack</a>
+      </div>
     </div>
-    <!-- rest of your form stays unchanged -->
-      <div class="col-md-2">
-        <label class="form-label">Cols</label>
-        <input type="number" id="cols" min="1" value="2" class="form-control" required />
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Rows</label>
-        <input type="number" id="rows" min="1" value="2" class="form-control" required />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Base Sign Name</label>
-        <input type="text" id="baseName" class="form-control" placeholder="e.g. Museum Panel" required />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Sign Type Folder</label>
-        <input class="form-control" id="signtype_folder" list="folderList" placeholder="e.g. useful_road" required />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Sign Type Name</label>
-        <input class="form-control" id="signtype_label" list="labelList" placeholder="e.g. Road Signs" required />
-      </div>
-      <div class="col-12">
-        <button class="btn btn-outline-light mt-2" type="submit">
-          <i class="fa fa-th me-1"></i> Fragment into Individual Signs
-        </button>
-      </div>
-    </form>
 
-    <div id="fragmentPreview" class="d-flex flex-wrap gap-2 mt-4"></div>
+    <div class="studio-note">
+      <span class="studio-status-dot"></span>
+      Multi-block generation remains experimental. Use preview + stitching guide to reduce seams before exporting in-game.
+    </div>
+
+    <div class="studio-stepbar" id="studioStepbar">
+      <div class="studio-step is-active" data-step="1"><small>Step 1</small><strong>Upload Image</strong></div>
+      <div class="studio-step" data-step="2"><small>Step 2</small><strong>Configure Grid</strong></div>
+      <div class="studio-step" data-step="3"><small>Step 3</small><strong>Preview Fragmentation</strong></div>
+      <div class="studio-step" data-step="4"><small>Step 4</small><strong>Generate Signs</strong></div>
+      <div class="studio-step" data-step="5"><small>Step 5</small><strong>Export / Add to Pack</strong></div>
+    </div>
+
+    <div class="studio-grid">
+      <section>
+        <form id="fragmentForm" class="studio-card" novalidate>
+          <h3><i class="fa fa-upload"></i> Step 1 ? Upload Image</h3>
+          <p class="studio-sub">Drag and drop or browse. Supported: PNG, JPG, JPEG, WEBP.</p>
+
+          <div id="uploadDropzone" class="studio-dropzone" tabindex="0" role="button" aria-label="Upload image">
+            <strong><i class="fa fa-image"></i> Drop image here or click to select</strong>
+            <small>Best results: high-resolution source with transparent edges.</small>
+            <input type="file" id="largeSign" accept="image/png,image/jpeg,image/jpg,image/webp" class="d-none" required />
+          </div>
+
+          <div class="studio-file-meta" id="fileMeta" hidden>
+            <div class="studio-meta-pill"><strong id="metaName">-</strong>Filename</div>
+            <div class="studio-meta-pill"><strong id="metaDimensions">-</strong>Dimensions</div>
+            <div class="studio-meta-pill"><strong id="metaSize">-</strong>File size</div>
+          </div>
+
+          <div class="d-flex gap-2 mt-2">
+            <button type="button" id="resetImageBtn" class="btn btn-sm btn-outline-light" disabled>
+              <i class="fa fa-rotate-left"></i> Clear image
+            </button>
+          </div>
+
+          <div id="warningList" class="studio-warnings"></div>
+
+          <hr class="border-secondary-subtle my-3" />
+
+          <h3><i class="fa fa-border-all"></i> Step 2 ? Configure Grid</h3>
+          <p class="studio-sub">Choose fragmentation and naming. Recommendations are automatic.</p>
+
+          <div class="studio-row-3">
+            <div>
+              <label class="form-label form-label-sm">Columns</label>
+              <input type="number" id="cols" min="1" max="20" value="2" class="form-control form-control-sm" required />
+            </div>
+            <div>
+              <label class="form-label form-label-sm">Rows</label>
+              <input type="number" id="rows" min="1" max="20" value="2" class="form-control form-control-sm" required />
+            </div>
+            <div>
+              <label class="form-label form-label-sm">Tile Overlap (px)</label>
+              <input type="number" id="tileOverlap" min="0" max="32" value="0" class="form-control form-control-sm" />
+            </div>
+          </div>
+
+          <div class="studio-export-panel mt-2">
+            <h4 class="studio-export-title"><i class="fa fa-expand"></i> Export tile sizing (Traffic Control)</h4>
+            <div class="studio-row-3">
+              <div>
+                <label class="form-label form-label-sm">Export size</label>
+                <select id="tileSizePreset" class="form-select form-select-sm">
+                  <option value="32">32 &times; 32</option>
+                  <option value="64" selected>64 &times; 64 (recommended)</option>
+                  <option value="128">128 &times; 128</option>
+                  <option value="custom">Custom (power of two)</option>
+                </select>
+              </div>
+              <div id="tileSizeCustomWrap" hidden>
+                <label class="form-label form-label-sm">Custom size (px)</label>
+                <input type="number" id="tileSizeCustom" min="16" max="256" step="1" value="64" class="form-control form-control-sm" />
+              </div>
+              <div>
+                <label class="form-label form-label-sm">Scaling mode</label>
+                <select id="scalingMode" class="form-select form-select-sm">
+                  <option value="fit" selected>Fit (letterbox)</option>
+                  <option value="fill">Fill / crop</option>
+                  <option value="stretch">Stretch (not recommended)</option>
+                </select>
+              </div>
+            </div>
+            <div class="studio-row mt-2">
+              <div>
+                <label class="form-label form-label-sm">Tile background</label>
+                <select id="bgMode" class="form-select form-select-sm">
+                  <option value="transparent" selected>Transparent</option>
+                  <option value="solid">Solid color fill</option>
+                  <option value="bleed">Edge bleed padding</option>
+                </select>
+              </div>
+              <div id="bgColorWrap" hidden>
+                <label class="form-label form-label-sm">Background color</label>
+                <input type="color" id="bgColor" value="#000000" class="form-control form-control-color form-control-sm" />
+              </div>
+              <div class="d-flex align-items-end">
+                <label class="form-check small mb-1">
+                  <input type="checkbox" id="preserveAspect" class="form-check-input me-2" checked />
+                  Preserve aspect ratio
+                </label>
+              </div>
+            </div>
+            <p class="studio-export-hint mb-0">
+              Source is split by rows/cols, then each fragment is scaled into a square PNG tile. Preview can appear larger; exported files use the configured export size.
+            </p>
+          </div>
+
+          <div class="studio-row mt-2">
+            <div>
+              <label class="form-label form-label-sm">Base Sign Name</label>
+              <input type="text" id="baseName" class="form-control form-control-sm" placeholder="e.g. Museum Panel" required />
+            </div>
+            <div>
+              <label class="form-label form-label-sm">Naming Pattern</label>
+              <select id="nameMode" class="form-select form-select-sm">
+                <option value="letters">Letters + numbers (A1, A2)</option>
+                <option value="numbers">Numbers only (1,2,3)</option>
+                <option value="directional">Directional (TopLeft...)</option>
+                <option value="custom">Custom suffix format</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-2" id="customSuffixWrap" hidden>
+            <label class="form-label form-label-sm">Custom suffix format</label>
+            <input id="customSuffix" class="form-control form-control-sm" placeholder="Example: {rowLetter}{colNumber}" value="{rowLetter}{colNumber}" />
+            <small class="text-secondary">Tokens: {row}, {col}, {rowLetter}, {colLetter}, {index}</small>
+          </div>
+
+          <div class="studio-row mt-2">
+            <div>
+              <label class="form-label form-label-sm">Sign Type Folder</label>
+              <input class="form-control form-control-sm" id="signtype_folder" list="folderList" placeholder="e.g. useful_road" required />
+            </div>
+            <div>
+              <label class="form-label form-label-sm">Sign Type Name</label>
+              <input class="form-control form-control-sm" id="signtype_label" list="labelList" placeholder="e.g. Road Signs" required />
+            </div>
+          </div>
+
+          <details class="mt-3">
+            <summary class="text-warning small" style="cursor:pointer;">Advanced options</summary>
+            <div class="studio-row mt-2">
+              <label class="form-check small"><input type="checkbox" id="optAutoBack" class="form-check-input me-2" checked /> Auto-generate backs</label>
+              <label class="form-check small"><input type="checkbox" id="optTransparentCleanup" class="form-check-input me-2" /> Transparent edge cleanup</label>
+              <label class="form-check small"><input type="checkbox" id="optSpacingComp" class="form-check-input me-2" /> Tile spacing compensation</label>
+              <label class="form-check small"><input type="checkbox" id="optCenterAlign" class="form-check-input me-2" checked /> Smart center alignment</label>
+              <label class="form-check small"><input type="checkbox" id="optTextlineTemplate" class="form-check-input me-2" /> Add textline template</label>
+              <label class="form-check small"><input type="checkbox" id="optGuideOverlay" class="form-check-input me-2" checked /> Generate stitching guide overlay</label>
+            </div>
+            <div class="mt-2" id="textlineTemplateWrap" hidden>
+              <label class="form-label form-label-sm">Template label (applies to all tiles)</label>
+              <input id="textlineTemplate" class="form-control form-control-sm" maxlength="80" placeholder="e.g. Label" />
+            </div>
+          </details>
+
+          <div class="studio-ai-tip">
+            <strong><i class="fa fa-robot"></i> Optional Ram AI helper</strong><br/>
+            Traffic Control sign textures usually work best at 64&times;64. Ask Ram AI for row/column advice, seam prevention, and naming recommendations before generating.
+          </div>
+        </form>
+
+        <div class="studio-card">
+          <h3><i class="fa fa-lightbulb"></i> Quick education</h3>
+          <div class="studio-help-grid">
+            <div class="studio-help-card"><h4>How multi-block signs work</h4>One image is split into a grid. Each tile becomes an individual sign texture in your pack.</div>
+            <div class="studio-help-card"><h4>Best image sizes</h4>Use dimensions cleanly divisible by your rows/cols. Export tiles default to 64&times;64 for Traffic Control compatibility.</div>
+            <div class="studio-help-card"><h4>Stitching in-game</h4>Place signs in matching grid order. Use generated labels (A1, A2...) and guide overlay.</div>
+            <div class="studio-help-card"><h4>Avoid visible seams</h4>Use slight overlap or spacing compensation when border artifacts appear after splitting.</div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="studio-card">
+          <h3><i class="fa fa-eye"></i> Step 3 ? Live Fragmentation Preview</h3>
+          <p class="studio-sub">Grid updates in real-time. Hover/click tiles to inspect mapping and naming.</p>
+
+          <div class="studio-preview-wrap" id="previewWrap">
+            <div class="studio-preview-empty" id="previewEmpty">Upload an image to see fragmentation preview.</div>
+            <img id="previewImage" alt="Fragment preview" hidden />
+            <div id="gridOverlay" class="studio-grid-overlay" hidden></div>
+          </div>
+
+          <div class="studio-side-meta">
+            <div class="studio-mini"><strong id="metaSourceFragment">-</strong>Source fragment</div>
+            <div class="studio-mini"><strong id="metaExportTile">64 &times; 64 px</strong>Export tile</div>
+            <div class="studio-mini"><strong id="metaTileCount">-</strong>Total tiles</div>
+            <div class="studio-mini"><strong id="metaHover">-</strong>Highlighted tile</div>
+            <div class="studio-mini"><strong id="metaNamingSample">-</strong>Naming sample</div>
+          </div>
+
+          <div id="resultPanel" class="studio-result" hidden>
+            <strong><i class="fa fa-check-circle"></i> Generation complete</strong>
+            <div id="resultSummary" class="mt-1"></div>
+            <div id="thumbGrid" class="studio-thumb-grid"></div>
+            <div class="d-flex gap-2 mt-2 flex-wrap">
+              <a class="btn btn-sm btn-outline-light" href="/signpack?pack=<%= packId %>"><i class="fa fa-folder-open"></i> Add to current signpack</a>
+              <button type="button" id="copyNamesBtn" class="btn btn-sm btn-outline-warning"><i class="fa fa-copy"></i> Copy filenames</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="studio-sticky-actions">
+      <div class="studio-progress" id="generationStatus">
+        <strong>Ready</strong>
+        Configure rows/cols and preview before generating.
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-light" type="button" id="recommendBtn"><i class="fa fa-wand-magic-sparkles"></i> Auto Recommend</button>
+        <button class="btn btn-warning" type="submit" form="fragmentForm" id="generateBtn"><i class="fa fa-gears"></i> Generate Signs</button>
+      </div>
+    </div>
 
     <datalist id="folderList">
       <% if (selectedPack && selectedPack.types) {
@@ -66,138 +743,737 @@
   </div>
 
   <script>
-    const existingTypes = <%- JSON.stringify(selectedPack?.types || {}) %>;
-    const folderInput = document.getElementById("signtype_folder");
-    const labelInput = document.getElementById("signtype_label");
+    (function () {
+      const existingTypes = <%- JSON.stringify(selectedPack?.types || {}) %>;
+      const packId = <%- JSON.stringify(packId) %>;
 
-    folderInput.addEventListener("input", () => {
-      const folderVal = folderInput.value.trim();
-      if (existingTypes[folderVal]) {
-        labelInput.value = existingTypes[folderVal];
-        labelInput.readOnly = true;
-      } else {
-        labelInput.readOnly = false;
-        labelInput.value = "";
+      const fileInput = document.getElementById("largeSign");
+      const rowsInput = document.getElementById("rows");
+      const colsInput = document.getElementById("cols");
+      const overlapInput = document.getElementById("tileOverlap");
+      const tileSizePreset = document.getElementById("tileSizePreset");
+      const tileSizeCustomWrap = document.getElementById("tileSizeCustomWrap");
+      const tileSizeCustom = document.getElementById("tileSizeCustom");
+      const scalingModeInput = document.getElementById("scalingMode");
+      const preserveAspectInput = document.getElementById("preserveAspect");
+      const bgModeInput = document.getElementById("bgMode");
+      const bgColorWrap = document.getElementById("bgColorWrap");
+      const bgColorInput = document.getElementById("bgColor");
+      const baseNameInput = document.getElementById("baseName");
+      const nameModeInput = document.getElementById("nameMode");
+      const customSuffixInput = document.getElementById("customSuffix");
+      const customSuffixWrap = document.getElementById("customSuffixWrap");
+      const typeFolderInput = document.getElementById("signtype_folder");
+      const typeLabelInput = document.getElementById("signtype_label");
+      const form = document.getElementById("fragmentForm");
+
+      const uploadDropzone = document.getElementById("uploadDropzone");
+      const resetImageBtn = document.getElementById("resetImageBtn");
+      const recommendBtn = document.getElementById("recommendBtn");
+      const generateBtn = document.getElementById("generateBtn");
+
+      const previewWrap = document.getElementById("previewWrap");
+      const previewImage = document.getElementById("previewImage");
+      const previewEmpty = document.getElementById("previewEmpty");
+      const gridOverlay = document.getElementById("gridOverlay");
+      const warningList = document.getElementById("warningList");
+
+      const fileMeta = document.getElementById("fileMeta");
+      const metaName = document.getElementById("metaName");
+      const metaDimensions = document.getElementById("metaDimensions");
+      const metaSize = document.getElementById("metaSize");
+      const metaSourceFragment = document.getElementById("metaSourceFragment");
+      const metaExportTile = document.getElementById("metaExportTile");
+      const metaTileCount = document.getElementById("metaTileCount");
+      const metaHover = document.getElementById("metaHover");
+      const metaNamingSample = document.getElementById("metaNamingSample");
+
+      const generationStatus = document.getElementById("generationStatus");
+      const stepbar = document.getElementById("studioStepbar");
+
+      const resultPanel = document.getElementById("resultPanel");
+      const resultSummary = document.getElementById("resultSummary");
+      const thumbGrid = document.getElementById("thumbGrid");
+      const copyNamesBtn = document.getElementById("copyNamesBtn");
+
+      const optAutoBack = document.getElementById("optAutoBack");
+      const optTransparentCleanup = document.getElementById("optTransparentCleanup");
+      const optSpacingComp = document.getElementById("optSpacingComp");
+      const optCenterAlign = document.getElementById("optCenterAlign");
+      const optTextlineTemplate = document.getElementById("optTextlineTemplate");
+      const textlineTemplateWrap = document.getElementById("textlineTemplateWrap");
+      const textlineTemplateInput = document.getElementById("textlineTemplate");
+      const optGuideOverlay = document.getElementById("optGuideOverlay");
+
+      let sourceFile = null;
+      let sourceImageDataUrl = null;
+      let imageElement = null;
+      let frontTileBlobs = [];
+      let backTileBlobs = [];
+      let generatedNames = [];
+      let generatedFileNames = [];
+      let lastThumbUrls = [];
+      let previewGeneration = 0;
+
+      const POWER_OF_TWO_SIZES = [16, 32, 64, 128, 256];
+
+      function bytesToSize(bytes) {
+        if (!bytes && bytes !== 0) return "-";
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
       }
-    });
 
-    const fileInput = document.getElementById("largeSign");
-    const rowsInput = document.getElementById("rows");
-    const colsInput = document.getElementById("cols");
-    const baseNameInput = document.getElementById("baseName");
-    const typeFolderInput = document.getElementById("signtype_folder");
-    const typeLabelInput = document.getElementById("signtype_label");
-    const previewContainer = document.getElementById("fragmentPreview");
-    const form = document.getElementById("fragmentForm");
+      function setStatus(title, sub) {
+        generationStatus.innerHTML = `<strong>${title}</strong>${sub || ""}`;
+      }
 
-    let imageDataUrl = null;
-    let frontTileBlobs = [];
-    let backTileBlobs = [];
+      function setStep(step) {
+        stepbar.querySelectorAll(".studio-step").forEach((node) => {
+          const n = Number(node.getAttribute("data-step"));
+          node.classList.toggle("is-active", n === step);
+          node.classList.toggle("is-done", n < step);
+        });
+      }
 
-    function renderPreview() {
-      frontTileBlobs = [];
-      backTileBlobs = [];
-      if (!imageDataUrl) return;
+      function pushWarning(type, text) {
+        const div = document.createElement("div");
+        div.className = `studio-warning ${type}`;
+        div.textContent = text;
+        warningList.appendChild(div);
+      }
 
-      const rows = parseInt(rowsInput.value);
-      const cols = parseInt(colsInput.value);
-      if (rows < 1 || cols < 1) return;
+      function clearWarnings() {
+        warningList.innerHTML = "";
+      }
 
-      const img = new Image();
-      img.onload = () => {
-        const tileWidth = img.width / cols;
-        const tileHeight = img.height / rows;
-        previewContainer.innerHTML = "";
+      function rowLetter(row) {
+        return String.fromCharCode(65 + row);
+      }
 
-        for (let y = 0; y < rows; y++) {
-          for (let x = 0; x < cols; x++) {
-            const canvas = document.createElement("canvas");
-            canvas.width = tileWidth;
-            canvas.height = tileHeight;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, x * tileWidth, y * tileHeight, tileWidth, tileHeight, 0, 0, tileWidth, tileHeight);
+      function colLetter(col) {
+        return String.fromCharCode(65 + col);
+      }
 
-            const dataURL = canvas.toDataURL();
+      function directionalName(r, c, rows, cols) {
+        const v = r === 0 ? "Top" : r === rows - 1 ? "Bottom" : "Mid";
+        const h = c === 0 ? "Left" : c === cols - 1 ? "Right" : "Center";
+        return `${v}${h}`;
+      }
 
-            canvas.toBlob(blob => {
-              const frontFile = new File([blob], `tile_${y + 1}_${x + 1}.png`, { type: "image/png" });
-              frontTileBlobs.push(frontFile);
+      function buildSuffix(r, c, rows, cols, index) {
+        const mode = nameModeInput.value;
+        if (mode === "numbers") return String(index + 1);
+        if (mode === "directional") return directionalName(r, c, rows, cols);
+        if (mode === "custom") {
+          return (customSuffixInput.value || "{rowLetter}{colNumber}")
+            .replace(/\{row\}/g, String(r + 1))
+            .replace(/\{col\}/g, String(c + 1))
+            .replace(/\{rowLetter\}/g, rowLetter(r))
+            .replace(/\{colLetter\}/g, colLetter(c))
+            .replace(/\{index\}/g, String(index + 1));
+        }
+        return `${rowLetter(r)}${c + 1}`;
+      }
 
-              const maskImg = new Image();
-              maskImg.onload = () => {
-                const shaped = document.createElement("canvas");
-                shaped.width = tileWidth;
-                shaped.height = tileHeight;
-                const backCtx = shaped.getContext("2d");
+      function buildGeneratedName(base, r, c, rows, cols, index) {
+        return `${base} ${buildSuffix(r, c, rows, cols, index)}`.trim();
+      }
 
-                backCtx.fillStyle = "#808080";
-                backCtx.fillRect(0, 0, tileWidth, tileHeight);
-                
-                // Flip horizontally
-                backCtx.globalCompositeOperation = "destination-in";
-                backCtx.save();
-                backCtx.translate(tileWidth, 0);
-                backCtx.scale(-1, 1); // horizontal flip
-                backCtx.drawImage(maskImg, 0, 0);
-                backCtx.restore();
+      function sanitizeFileName(v) {
+        return String(v || "tile")
+          .toLowerCase()
+          .replace(/[^a-z0-9._-]+/g, "_")
+          .replace(/_+/g, "_")
+          .replace(/^_+|_+$/g, "")
+          .slice(0, 72) || "tile";
+      }
 
-                shaped.toBlob(backBlob => {
-                  const backFile = new File([backBlob], `tile_${y + 1}_${x + 1}_back.png`, { type: "image/png" });
-                  backTileBlobs.push(backFile);
-                }, "image/png");
-              };
-              maskImg.src = dataURL;
-            }, "image/png");
+      function normalizeTileSize(raw) {
+        const n = Number(raw);
+        if (POWER_OF_TWO_SIZES.includes(n)) return n;
+        const clamped = Math.min(256, Math.max(16, Math.round(n)));
+        const pow = Math.pow(2, Math.round(Math.log2(clamped)));
+        return Math.min(256, Math.max(16, pow));
+      }
 
-            const thumb = document.createElement("img");
-            thumb.src = dataURL;
-            thumb.classList.add("border", "rounded", "shadow-sm");
-            thumb.style.width = "100px";
-            previewContainer.appendChild(thumb);
+      function getExportTileSize() {
+        if (tileSizePreset.value === "custom") {
+          return normalizeTileSize(tileSizeCustom.value);
+        }
+        return normalizeTileSize(tileSizePreset.value);
+      }
+
+      function updateExportControlsUi() {
+        tileSizeCustomWrap.hidden = tileSizePreset.value !== "custom";
+        bgColorWrap.hidden = bgModeInput.value !== "solid";
+      }
+
+      function canvasToPngFile(canvas, fileName) {
+        return new Promise((resolve) => {
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              resolve(null);
+              return;
+            }
+            resolve(new File([blob], fileName, { type: "image/png" }));
+          }, "image/png");
+        });
+      }
+
+      function drawExportTile(srcCanvas, srcW, srcH) {
+        const exportSize = getExportTileSize();
+        const mode = scalingModeInput.value;
+        const preserveAspect = preserveAspectInput.checked;
+        const bgMode = bgModeInput.value;
+        const bgColor = bgColorInput.value || "#000000";
+
+        const out = document.createElement("canvas");
+        out.width = exportSize;
+        out.height = exportSize;
+        const ctx = out.getContext("2d");
+
+        if (bgMode === "solid") {
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, exportSize, exportSize);
+        } else {
+          ctx.clearRect(0, 0, exportSize, exportSize);
+        }
+
+        let scale;
+        if (mode === "stretch" || !preserveAspect) {
+          scale = { sx: exportSize / srcW, sy: exportSize / srcH };
+        } else if (mode === "fill") {
+          const s = Math.max(exportSize / srcW, exportSize / srcH);
+          scale = { sx: s, sy: s };
+        } else {
+          const s = Math.min(exportSize / srcW, exportSize / srcH);
+          if (bgMode === "bleed") {
+            scale = { sx: s * 1.04, sy: s * 1.04 };
+          } else {
+            scale = { sx: s, sy: s };
           }
         }
-      };
-      img.src = imageDataUrl;
-    }
 
-    fileInput.addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        imageDataUrl = e.target.result;
-        renderPreview();
-      };
-      reader.readAsDataURL(file);
-    });
+        const dw = srcW * scale.sx;
+        const dh = srcH * scale.sy;
+        const dx = (exportSize - dw) / 2;
+        const dy = (exportSize - dh) / 2;
 
-    rowsInput.addEventListener("input", renderPreview);
-    colsInput.addEventListener("input", renderPreview);
+        ctx.save();
+        if (mode === "fill" && preserveAspect) {
+          ctx.beginPath();
+          ctx.rect(0, 0, exportSize, exportSize);
+          ctx.clip();
+        }
+        ctx.drawImage(srcCanvas, 0, 0, srcW, srcH, dx, dy, dw, dh);
+        ctx.restore();
 
-    form.addEventListener("submit", async e => {
-      e.preventDefault();
-      const fd = new FormData();
+        if (optTransparentCleanup.checked && bgMode === "transparent") {
+          ctx.globalAlpha = 0.98;
+        }
 
-      fd.append("baseName", baseNameInput.value);
-      fd.append("signtype_folder", typeFolderInput.value);
-      fd.append("signtype_label", typeLabelInput.value);
-      fd.append("rows", rowsInput.value);
-      fd.append("cols", colsInput.value);
-
-      frontTileBlobs.forEach(f => fd.append("frontTiles", f));
-      backTileBlobs.forEach(f => fd.append("backTiles", f));
-
-      const response = await fetch(`/signpack/fragment-upload/<%= selectedPack?.pack_id || '' %>`, {
-        method: "POST",
-        body: fd
-      });
-
-      if (response.ok) {
-        location.href = `/signpack?pack=<%= selectedPack?.pack_id || '' %>`;
-      } else {
-        alert("Upload failed.");
+        return out;
       }
-    });
+
+      function suggestGrid(width, height) {
+        const ratio = width / Math.max(1, height);
+        const targetTile = getExportTileSize() * 2;
+        let cols = Math.max(1, Math.round(width / targetTile));
+        let rows = Math.max(1, Math.round(height / targetTile));
+
+        if (ratio > 2.3) cols = Math.max(cols, rows + 1);
+        if (ratio < 0.6) rows = Math.max(rows, cols + 1);
+
+        cols = Math.min(cols, 12);
+        rows = Math.min(rows, 12);
+
+        return { rows, cols };
+      }
+
+      function updateTypeLabelAutoFill() {
+        const folder = typeFolderInput.value.trim();
+        if (existingTypes[folder]) {
+          typeLabelInput.value = existingTypes[folder];
+          typeLabelInput.readOnly = true;
+        } else {
+          typeLabelInput.readOnly = false;
+          if (!typeLabelInput.dataset.manual) typeLabelInput.value = "";
+        }
+      }
+
+      function refreshMeta() {
+        if (!sourceFile || !imageElement) return;
+        fileMeta.hidden = false;
+        metaName.textContent = sourceFile.name;
+        metaDimensions.textContent = `${imageElement.width}?${imageElement.height}`;
+        metaSize.textContent = bytesToSize(sourceFile.size);
+      }
+
+      function clearImage() {
+        sourceFile = null;
+        sourceImageDataUrl = null;
+        imageElement = null;
+        fileInput.value = "";
+        previewImage.hidden = true;
+        previewImage.src = "";
+        gridOverlay.hidden = true;
+        gridOverlay.innerHTML = "";
+        previewEmpty.hidden = false;
+        previewEmpty.textContent = "Upload an image to see fragmentation preview.";
+        fileMeta.hidden = true;
+        metaSourceFragment.textContent = "-";
+        metaExportTile.textContent = `${getExportTileSize()} ? ${getExportTileSize()} px`;
+        metaTileCount.textContent = "-";
+        metaHover.textContent = "-";
+        metaNamingSample.textContent = "-";
+        resetImageBtn.disabled = true;
+        clearWarnings();
+        setStep(1);
+        setStatus("Ready", "Configure rows/cols and preview before generating.");
+      }
+
+      function loadImageFromFile(file) {
+        if (!file) return;
+        if (!/^image\/(png|jpeg|jpg|webp)$/i.test(file.type)) {
+          clearWarnings();
+          pushWarning("warn", "Unsupported format. Use PNG, JPG/JPEG, or WEBP.");
+          return;
+        }
+        sourceFile = file;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          sourceImageDataUrl = ev.target.result;
+          const img = new Image();
+          img.onload = () => {
+            imageElement = img;
+            previewImage.src = sourceImageDataUrl;
+            previewImage.hidden = false;
+            previewEmpty.hidden = true;
+            resetImageBtn.disabled = false;
+            refreshMeta();
+            clearWarnings();
+            const rec = suggestGrid(img.width, img.height);
+            rowsInput.value = rec.rows;
+            colsInput.value = rec.cols;
+            void renderPreview();
+            setStep(2);
+            setStatus("Image ready", `Recommended grid: ${rec.rows} rows ? ${rec.cols} cols`);
+          };
+          img.src = sourceImageDataUrl;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function gatherWarnings(rows, cols, tileW, tileH) {
+        clearWarnings();
+        if (!imageElement) return;
+
+        const exportSize = getExportTileSize();
+        const mode = scalingModeInput.value;
+        const fragmentAspect = tileW / Math.max(1, tileH);
+
+        pushWarning("info", `Export tiles will be normalized to ${exportSize}?${exportSize} PNG (power-of-two).`);
+
+        if (rows > 12 || cols > 12) {
+          pushWarning("warn", "Rows/cols are very high. Tiny fragments can be unreadable in-game.");
+        }
+
+        if (tileW < 32 || tileH < 32) {
+          pushWarning("warn", "Source fragments are very small. Scaling up may blur details and show seams.");
+        }
+
+        if (tileW < exportSize * 0.5 || tileH < exportSize * 0.5) {
+          pushWarning("warn", "Fragments are smaller than half the export size. Expect upscaling and possible seam artifacts.");
+        }
+
+        if (imageElement.width < 128 || imageElement.height < 128) {
+          pushWarning("warn", "Source image resolution is low for multi-block usage.");
+        }
+
+        if (imageElement.width % cols !== 0 || imageElement.height % rows !== 0) {
+          pushWarning("warn", "Uneven fragmentation detected. Rounding can misalign edges and cause visible seams.");
+        } else {
+          pushWarning("good", "Image dimensions divide evenly by the selected grid.");
+        }
+
+        if (Math.abs(fragmentAspect - 1) > 0.12) {
+          pushWarning("warn", "Fragment aspect ratio is not square. Fit mode letterboxes; fill mode crops ? check alignment in preview.");
+        }
+
+        if (mode === "stretch") {
+          pushWarning("warn", "Stretch scaling may distort artwork. Fit or fill is recommended for Traffic Control textures.");
+        }
+
+        if (!preserveAspectInput.checked) {
+          pushWarning("warn", "Aspect ratio is not preserved. Shapes may look stretched in-game.");
+        }
+
+        if (!optAutoBack.checked) {
+          pushWarning("info", "Back textures are disabled. Signs will use no generated back tile.");
+        }
+
+        if (optSpacingComp.checked || Number(overlapInput.value) > 0) {
+          pushWarning("info", "Spacing compensation/overlap enabled to reduce visible seams.");
+        }
+
+        if (bgModeInput.value === "bleed") {
+          pushWarning("info", "Edge bleed padding is enabled to soften tile seams.");
+        }
+      }
+
+      function clearThumbUrls() {
+        lastThumbUrls.forEach((u) => URL.revokeObjectURL(u));
+        lastThumbUrls = [];
+      }
+
+      async function renderPreview() {
+        if (!imageElement || !sourceImageDataUrl) return;
+
+        const runId = ++previewGeneration;
+        const rows = Math.max(1, parseInt(rowsInput.value, 10) || 1);
+        const cols = Math.max(1, parseInt(colsInput.value, 10) || 1);
+        const overlap = Math.max(0, parseInt(overlapInput.value, 10) || 0);
+        const exportSize = getExportTileSize();
+
+        const tileW = imageElement.width / cols;
+        const tileH = imageElement.height / rows;
+
+        updateExportControlsUi();
+        gatherWarnings(rows, cols, tileW, tileH);
+
+        metaSourceFragment.textContent = `${Math.round(tileW)} \u00d7 ${Math.round(tileH)} px`;
+        metaExportTile.textContent = `${exportSize} \u00d7 ${exportSize} px`;
+        metaTileCount.textContent = `${rows * cols} tiles`;
+        metaNamingSample.textContent = buildGeneratedName(baseNameInput.value || "Sign", 0, 0, rows, cols, 0);
+
+        generatedNames = [];
+        generatedFileNames = [];
+        frontTileBlobs = [];
+        backTileBlobs = [];
+
+        gridOverlay.hidden = false;
+        gridOverlay.innerHTML = "";
+        gridOverlay.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        gridOverlay.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+        const naturalCanvas = document.createElement("canvas");
+        naturalCanvas.width = imageElement.width;
+        naturalCanvas.height = imageElement.height;
+        const naturalCtx = naturalCanvas.getContext("2d");
+
+        let drawX = 0;
+        let drawY = 0;
+        if (optCenterAlign.checked) {
+          drawX = Math.floor((naturalCanvas.width - imageElement.width) / 2);
+          drawY = Math.floor((naturalCanvas.height - imageElement.height) / 2);
+        }
+        naturalCtx.drawImage(imageElement, drawX, drawY, imageElement.width, imageElement.height);
+
+        clearThumbUrls();
+        thumbGrid.innerHTML = "";
+
+        const tileJobs = [];
+        const nextFrontTiles = [];
+        const nextBackTiles = [];
+        let tileIndex = 0;
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const currentIndex = tileIndex;
+            const label = `${rowLetter(r)}${c + 1}`;
+            const generatedName = buildGeneratedName(baseNameInput.value || "Tile", r, c, rows, cols, tileIndex);
+            generatedNames.push(generatedName);
+
+            const safeBase = sanitizeFileName(generatedName);
+            const frontName = `${safeBase}_front.png`;
+            const backName = `${safeBase}_back.png`;
+            generatedFileNames.push(frontName);
+
+            const startX = Math.max(0, Math.round(c * tileW) - overlap);
+            const startY = Math.max(0, Math.round(r * tileH) - overlap);
+            const endX = Math.min(imageElement.width, Math.round((c + 1) * tileW) + overlap);
+            const endY = Math.min(imageElement.height, Math.round((r + 1) * tileH) + overlap);
+
+            const srcW = Math.max(1, endX - startX);
+            const srcH = Math.max(1, endY - startY);
+
+            const fragmentCanvas = document.createElement("canvas");
+            fragmentCanvas.width = srcW;
+            fragmentCanvas.height = srcH;
+            const fragmentCtx = fragmentCanvas.getContext("2d");
+            fragmentCtx.drawImage(naturalCanvas, startX, startY, srcW, srcH, 0, 0, srcW, srcH);
+
+            const exportCanvas = drawExportTile(fragmentCanvas, srcW, srcH);
+
+            const tileDiv = document.createElement("div");
+            tileDiv.className = "studio-tile";
+            tileDiv.dataset.label = label;
+            tileDiv.innerHTML = `<span class="studio-tile-label">${label}</span>`;
+            tileDiv.addEventListener("mouseenter", () => {
+              metaHover.textContent = `${label} \u2014 ${generatedName}`;
+              tileDiv.classList.add("is-active");
+            });
+            tileDiv.addEventListener("mouseleave", () => {
+              tileDiv.classList.remove("is-active");
+            });
+            tileDiv.addEventListener("click", () => {
+              metaHover.textContent = `Src ${Math.round(srcW)}\u00d7${Math.round(srcH)} \u2192 ${exportSize}\u00d7${exportSize}`;
+            });
+            gridOverlay.appendChild(tileDiv);
+
+            tileJobs.push(
+              (async () => {
+                const frontFile = await canvasToPngFile(exportCanvas, frontName);
+                if (!frontFile || runId !== previewGeneration) return;
+
+                nextFrontTiles[currentIndex] = frontFile;
+
+                if (optAutoBack.checked) {
+                  const backCanvas = document.createElement("canvas");
+                  backCanvas.width = exportSize;
+                  backCanvas.height = exportSize;
+                  const bctx = backCanvas.getContext("2d");
+                  bctx.fillStyle = "#808080";
+                  bctx.fillRect(0, 0, exportSize, exportSize);
+                  bctx.globalCompositeOperation = "destination-in";
+                  bctx.save();
+                  bctx.translate(exportSize, 0);
+                  bctx.scale(-1, 1);
+                  bctx.drawImage(exportCanvas, 0, 0);
+                  bctx.restore();
+                  const backFile = await canvasToPngFile(backCanvas, backName);
+                  if (backFile && runId === previewGeneration) {
+                    nextBackTiles[currentIndex] = backFile;
+                  }
+                }
+
+                const url = URL.createObjectURL(frontFile);
+                lastThumbUrls.push(url);
+                const thumb = document.createElement("div");
+                thumb.className = "studio-thumb";
+                thumb.innerHTML = `<img src="${url}" alt="${label}"><small title="${frontName}">${label} \u00b7 ${exportSize}px</small>`;
+                thumbGrid.appendChild(thumb);
+              })()
+            );
+
+            tileIndex++;
+          }
+        }
+
+        await Promise.all(tileJobs);
+
+        if (runId !== previewGeneration) return;
+
+        frontTileBlobs = nextFrontTiles.filter(Boolean);
+        backTileBlobs = nextBackTiles.filter(Boolean);
+
+        if (optGuideOverlay.checked) {
+          pushWarning("info", "Stitching guide labels are active (A1, A2, B1...) for placement reference.");
+        }
+
+        resultPanel.hidden = true;
+        setStep(3);
+        setStatus(
+          "Preview ready",
+          `${rows * cols} tiles mapped at ${exportSize}\u00d7${exportSize} export size. Review overlay before generating.`
+        );
+      }
+
+      async function submitGeneration(e) {
+        e.preventDefault();
+        if (!sourceFile || !imageElement) {
+          pushWarning("warn", "Upload an image before generating.");
+          return;
+        }
+
+        const rows = Math.max(1, parseInt(rowsInput.value, 10) || 1);
+        const cols = Math.max(1, parseInt(colsInput.value, 10) || 1);
+
+        if (rows * cols > 225) {
+          alert("Grid too large. Please keep total fragments at 225 or less.");
+          return;
+        }
+
+        if (!baseNameInput.value.trim()) {
+          alert("Please provide a base sign name.");
+          return;
+        }
+
+        if (!typeFolderInput.value.trim() || !typeLabelInput.value.trim()) {
+          alert("Please provide sign type folder and label.");
+          return;
+        }
+
+        await renderPreview();
+
+        if (!frontTileBlobs.length) {
+          pushWarning("warn", "Tile preview is still processing. Wait a moment and try again.");
+          return;
+        }
+
+        setStep(4);
+        setStatus("Generating...", "Fragmenting textures and uploading tiles to your pack.");
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating';
+
+        const exportSize = getExportTileSize();
+        const fd = new FormData();
+        fd.append("baseName", baseNameInput.value.trim());
+        fd.append("signtype_folder", typeFolderInput.value.trim());
+        fd.append("signtype_label", typeLabelInput.value.trim());
+        fd.append("rows", String(rows));
+        fd.append("cols", String(cols));
+        fd.append("nameMode", nameModeInput.value);
+        fd.append("generatedNames", JSON.stringify(generatedNames));
+        fd.append("textlineTemplate", optTextlineTemplate.checked ? (textlineTemplateInput.value || "") : "");
+        fd.append("tileExportSize", String(exportSize));
+        fd.append("scalingMode", scalingModeInput.value);
+        fd.append("preserveAspect", preserveAspectInput.checked ? "1" : "0");
+        fd.append("bgMode", bgModeInput.value);
+        fd.append("bgColor", bgColorInput.value || "#000000");
+        fd.append("tileOverlap", String(Math.max(0, parseInt(overlapInput.value, 10) || 0)));
+        fd.append("transparentCleanup", optTransparentCleanup.checked ? "1" : "0");
+
+        frontTileBlobs.forEach((f) => fd.append("frontTiles", f));
+        backTileBlobs.forEach((f) => fd.append("backTiles", f));
+
+        try {
+          const response = await fetch(`/signpack/fragment-upload/${packId}`, {
+            method: "POST",
+            body: fd,
+          });
+
+          if (!response.ok) {
+            throw new Error("Upload failed");
+          }
+
+          setStep(5);
+          setStatus("Done", "Tiles generated and inserted into your active signpack.");
+          resultPanel.hidden = false;
+          resultSummary.innerHTML = `
+            <div><strong>${generatedNames.length}</strong> signs generated at <strong>${exportSize}&times;${exportSize}</strong> PNG tiles.</div>
+            <div class="text-light-emphasis mt-1">Type folder: <code>${typeFolderInput.value.trim()}</code> &middot; Back textures: ${optAutoBack.checked ? "enabled" : "disabled"}</div>
+          `;
+        } catch (err) {
+          alert("Generation failed. Please try again.");
+          setStatus("Failed", "Generation failed. Review inputs and try again.");
+        } finally {
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = '<i class="fa fa-gears"></i> Generate Signs';
+        }
+      }
+
+      function attachDnD() {
+        uploadDropzone.addEventListener("click", () => fileInput.click());
+        uploadDropzone.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInput.click();
+          }
+        });
+
+        ["dragenter", "dragover"].forEach((ev) => {
+          uploadDropzone.addEventListener(ev, (e) => {
+            e.preventDefault();
+            uploadDropzone.classList.add("is-dragover");
+          });
+        });
+
+        ["dragleave", "drop"].forEach((ev) => {
+          uploadDropzone.addEventListener(ev, (e) => {
+            e.preventDefault();
+            uploadDropzone.classList.remove("is-dragover");
+          });
+        });
+
+        uploadDropzone.addEventListener("drop", (e) => {
+          const file = e.dataTransfer.files && e.dataTransfer.files[0];
+          if (file) loadImageFromFile(file);
+        });
+      }
+
+      function applyRecommendations() {
+        if (!imageElement) return;
+        const rec = suggestGrid(imageElement.width, imageElement.height);
+        rowsInput.value = rec.rows;
+        colsInput.value = rec.cols;
+        void renderPreview();
+        setStatus("Recommendations applied", `${rec.rows} � ${rec.cols} based on image aspect ratio.`);
+      }
+
+      function bind() {
+        attachDnD();
+
+        fileInput.addEventListener("change", (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (file) loadImageFromFile(file);
+        });
+
+        resetImageBtn.addEventListener("click", clearImage);
+        recommendBtn.addEventListener("click", applyRecommendations);
+        copyNamesBtn.addEventListener("click", async () => {
+          if (!generatedFileNames.length) return;
+          await navigator.clipboard.writeText(generatedFileNames.join("\n"));
+          copyNamesBtn.innerHTML = '<i class="fa fa-check"></i> Copied';
+          setTimeout(() => {
+            copyNamesBtn.innerHTML = '<i class="fa fa-copy"></i> Copy filenames';
+          }, 1200);
+        });
+
+        [rowsInput, colsInput, overlapInput, baseNameInput, nameModeInput, customSuffixInput].forEach((el) => {
+          el.addEventListener("input", () => {
+            customSuffixWrap.hidden = nameModeInput.value !== "custom";
+            if (imageElement) void renderPreview();
+          });
+        });
+
+        [
+          tileSizePreset,
+          tileSizeCustom,
+          scalingModeInput,
+          preserveAspectInput,
+          bgModeInput,
+          bgColorInput,
+        ].forEach((el) => {
+          el.addEventListener("input", () => {
+            updateExportControlsUi();
+            if (tileSizePreset.value === "custom") {
+              tileSizeCustom.value = String(normalizeTileSize(tileSizeCustom.value));
+            }
+            if (imageElement) void renderPreview();
+          });
+          el.addEventListener("change", () => {
+            updateExportControlsUi();
+            if (imageElement) void renderPreview();
+          });
+        });
+
+        typeFolderInput.addEventListener("input", updateTypeLabelAutoFill);
+        typeLabelInput.addEventListener("input", () => {
+          typeLabelInput.dataset.manual = "1";
+        });
+
+        optTextlineTemplate.addEventListener("change", () => {
+          textlineTemplateWrap.hidden = !optTextlineTemplate.checked;
+        });
+
+        [optAutoBack, optTransparentCleanup, optSpacingComp, optCenterAlign, optGuideOverlay].forEach((el) => {
+          el.addEventListener("change", () => {
+            if (imageElement) void renderPreview();
+          });
+        });
+
+        form.addEventListener("submit", submitGeneration);
+
+        clearImage();
+        customSuffixWrap.hidden = true;
+        textlineTemplateWrap.hidden = true;
+        updateExportControlsUi();
+      }
+
+      bind();
+    })();
   </script>
 </body>
 </html>

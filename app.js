@@ -11,7 +11,19 @@ const serveIndex = require("serve-index");
 
 const app = express();
 const session = require("express-session");
-const { dburl, email, domain, discord } = require("./config");
+const { dburl, email, domain, discord, ramAi, webauthn } = require("./config");
+const { createRamAiRouter } = require("./routes/ramAi");
+const { createPasskeyRouter } = require("./routes/passkeys");
+const { createAccountRouter } = require("./routes/account");
+const { refreshSessionUser, editorUserView, deleteAvatarFile } = require("./lib/userProfile");
+const { parseExportOptions, renderTilePng } = require("./lib/multiblockTiles");
+const {
+  otpEmail,
+  resetPasswordEmail,
+  passwordChangedEmail,
+  accountDeletedEmail,
+  welcomeEmail,
+} = require("./lib/emailTemplates");
 const passport = require("passport");
 const DiscordStrategy = require("passport-discord").Strategy;
 const MongoStore = require("connect-mongo");
@@ -105,6 +117,9 @@ app.use('/users/:username', isLoggedIn, (req, res, next) => {
 
 // --- App download homepage ---
 
+app.use(createAccountRouter({ usersDB, isLoggedIn, webauthn }));
+app.use(createPasskeyRouter({ usersDB, webauthn }));
+
 // --- Delete account (confirm page) ---
 app.get("/account/delete", isLoggedIn, (req, res) => {
   res.render("account-delete", {
@@ -124,6 +139,8 @@ app.post("/account/delete", isLoggedIn, async (req, res) => {
     const email = req.session.user._id;     // users collection _id
     const username = req.session.user.name; // folder name in /users
 
+    await sendAppMailSafe(email, accountDeletedEmail());
+
     // 1) Remove user document
     await usersDB.deleteOne({ _id: email });
 
@@ -132,6 +149,8 @@ app.post("/account/delete", isLoggedIn, async (req, res) => {
     if (fs.existsSync(dir)) {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+
+    deleteAvatarFile(email);
 
     // 3) Destroy session + redirect
     req.session.destroy(() => {
@@ -180,8 +199,8 @@ app.get("/forgot-password", (req, res) => {
 
 
 app.post("/forgot-password", async (req, res) => {
-  const { email } = req.body;
-  const user = await usersDB.findOne({ _id: email });
+  const { email: recipientEmail } = req.body;
+  const user = await usersDB.findOne({ _id: recipientEmail });
 
   if (!user) return res.redirect("/forgot-password?error=notfound");
 
@@ -193,50 +212,9 @@ app.post("/forgot-password", async (req, res) => {
   await user.save();
 
   const resetLink = `${domain}/reset/${token}`;
- const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TC Signpack Maker - Reset Password</title>
-</head>
-<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
-  <div style="max-width: 600px; margin: 40px auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
-    <img src="https://gamearoo.top/ram-api-img/bc91c29e-d0af-460f-a30e-541cd5b57179.png" alt="TC Signpack Maker Icon" style="display: block; margin: 0 auto 20px; max-width: 120px; height: auto;" />
+  const mail = resetPasswordEmail(resetLink);
 
-    <h1 style="text-align: center; color: #333333; margin-bottom: 20px;">Reset Your Password</h1>
-
-    <p style="text-align: center; font-size: 16px; color: #555;">
-      You recently requested to reset your password for your <strong>TC Signpack Maker</strong> account.
-    </p>
-
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; font-size: 16px; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 6px;">Reset Password</a>
-    </div>
-
-    <p style="text-align: center; font-size: 14px; color: #555;">
-      If you didn’t request this, you can safely ignore this email.
-    </p>
-
-    <p style="text-align: center; font-size: 14px; color: #555;">
-      For support, contact <a href="mailto:support@gamearoo.dev" style="color: #007bff; text-decoration: none;">support@gamearoo.dev</a>.
-    </p>
-  </div>
-</body>
-</html>
-
-`
-
-const info = await transporter.sendMail({
-  from: '"TC Signpack Maker" <no-reply@gamearoo.dev>',
-  
-
-  to: `${email}`, // list of receivers
-  subject: "TC Signpack Maker - Reset Password", // Subject line
-  text: "", // plain text body
-  html, // html body
-});
+await sendAppMail(recipientEmail, mail);
 
   res.redirect("/forgot-password?success=sent");
 });
@@ -276,6 +254,8 @@ app.post("/reset/:token", async (req, res) => {
   user.resetToken = null;
   user.resetTokenExpiry = null;
   await user.save();
+
+  await sendAppMailSafe(user._id, passwordChangedEmail());
 
   res.redirect("/login?reset=success");
 });
@@ -363,6 +343,8 @@ app.get("/auth/discord/login/callback", passport.authenticate("discord", {
     req.session.user = {
       _id: existing._id,
       name: existing.name,
+      displayName: existing.displayName || null,
+      avatarUrl: existing.avatarUrl || null,
       discord: existing.discordId
     };
 
@@ -558,10 +540,15 @@ app.post("/signup/discord-finish", async (req, res) => {
   req.session.user = {
     _id: email,
     name,
+    displayName: null,
+    avatarUrl: null,
     discord: discordData.discordId
   };
 
   delete req.session.discordSignup;
+
+  await sendAppMailSafe(email, welcomeEmail({ name, loginUrl: `${domain}/login` }));
+
   res.redirect("/signpack");
 });
 
@@ -628,7 +615,13 @@ if(await bcrypt.compare(code, user.CurrentOTT)) {
 
   user.save();
   req.session.isAuth = true;
-  req.session.user = {_id: email, name: user.name, discord: user.discordId};
+  req.session.user = {
+    _id: email,
+    name: user.name,
+    displayName: user.displayName || null,
+    avatarUrl: user.avatarUrl || null,
+    discord: user.discordId
+  };
   res.redirect("/signpack")
 } else {
   user.CurrentOTT = "‎";
@@ -706,6 +699,28 @@ let configOptions = {
 }
 const transporter = nodemailer.createTransport(configOptions);
 
+function mailFrom() {
+  return email.from || '"Signpack Maker" <no-reply@gamearoo.dev>';
+}
+
+async function sendAppMail(to, mail) {
+  return transporter.sendMail({
+    from: mailFrom(),
+    to: String(to),
+    subject: mail.subject,
+    text: mail.text,
+    html: mail.html,
+  });
+}
+
+async function sendAppMailSafe(to, mail) {
+  try {
+    await sendAppMail(to, mail);
+  } catch (err) {
+    console.error("Email send failed:", err.message);
+  }
+}
+
 async function login(emailId, name){
 
 
@@ -728,47 +743,9 @@ async function login(emailId, name){
   // `
 let code = Math.floor(Math.random()*90000) + 10000;;
 
-const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TC Signpack Maker One-Time Password</title>
-</head>
-<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
-  <div style="max-width: 600px; margin: 40px auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
-    <img src="https://gamearoo.top/ram-api-img/bc91c29e-d0af-460f-a30e-541cd5b57179.png" alt="TC Signpack Maker Icon" style="display: block; margin: 0 auto 20px; max-width: 120px; height: auto;" />
-    
-    <h1 style="text-align: center; color: #333333; margin-bottom: 20px;">Your One-Time Password</h1>
-    <p style="text-align: center; font-size: 18px; color: #000;"><strong>Code:</strong> <span style="font-size: 24px; color: #007bff;">${code}</span></p>
-    
-    <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;" />
-    
-    <p style="text-align: center; font-size: 14px; color: #555;">
-      This code was generated for your recent login attempt to the <strong>TC Signpack Maker</strong>.
-    </p>
-    <p style="text-align: center; font-size: 14px; color: #555;">
-      If you did not request this code, you can safely ignore this email.
-    </p>
-    <p style="text-align: center; font-size: 14px; color: #555;">
-      For support, contact <a href="mailto:support@gamearoo.dev" style="color: #007bff; text-decoration: none;">support@gamearoo.dev</a>.
-    </p>
-  </div>
-</body>
-</html>
+const mail = otpEmail(code);
 
-`
-
-const info = await transporter.sendMail({
-  from: '"TC Signpack Maker" <no-reply@gamearoo.dev>',
-  
-
-  to: `${emailId}`, // list of receivers
-  subject: "Your One Time Password For TC Signpack Maker", // Subject line
-  text: "", // plain text body
-  html, // html body
-});
+await sendAppMail(emailId, mail);
 
 
 return code;
@@ -863,6 +840,7 @@ app.get("/signpack/download/:packId", isLoggedIn, async (req, res) => {
 
 
 app.get("/signpack", isLoggedIn, async (req, res) => {
+  await refreshSessionUser(req, usersDB);
   const selectedId = req.query.pack;
   const rawIndex = req.query.signIndex;
   const selectedSignIndex = rawIndex ? parseInt(rawIndex) - 1 : null;
@@ -966,11 +944,14 @@ app.get("/signpack", isLoggedIn, async (req, res) => {
   const selectedSign = selectedPack?.signs?.[selectedSignIndex] || null;
 
   res.render("signpack/index", {
-    user: { username, discord: req.session.user.discord },
+    user: editorUserView(req.session.user),
     signpacks,
     selectedPack,
     selectedSign,
-    backImages
+    backImages,
+    ramAiEnabled: !!ramAi.enabled,
+    ramAiDebug: !!ramAi.debug,
+    ramAiPollMs: Math.min(Math.max(Number(ramAi.statusPollMs) || 5000, 5000), 10000),
   });
 });
 
@@ -1496,8 +1477,9 @@ app.get("/signpack/multiblock/:packId", isLoggedIn, async (req, res) => {
 
   const signsData = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
 
+  await refreshSessionUser(req, usersDB);
   res.render("signpack/multiblock", {
-    user: { username, discord: req.session.user.discord },
+    user: editorUserView(req.session.user),
     selectedPack: signsData,
     packId,
     domain
@@ -1520,6 +1502,17 @@ app.post("/signpack/fragment-upload/:packId", isLoggedIn, uploadFragmentTiles.fi
     const username = req.session.user.name;
     const packId = req.params.packId;
     const { baseName, signtype_folder, signtype_label, rows, cols } = req.body;
+    let generatedNames = [];
+    try {
+      const parsedNames = JSON.parse(req.body.generatedNames || "[]");
+      if (Array.isArray(parsedNames)) {
+        generatedNames = parsedNames
+          .map((n) => String(n || "").trim())
+          .filter(Boolean);
+      }
+    } catch (_err) {}
+    const textlineTemplate = String(req.body.textlineTemplate || "").trim();
+    const exportOpts = parseExportOptions(req.body);
 
     const basePath = path.join(__dirname, "users", username, "packs", packId);
     const type = signtype_folder.trim().toLowerCase();
@@ -1558,21 +1551,38 @@ app.post("/signpack/fragment-upload/:packId", isLoggedIn, uploadFragmentTiles.fi
         const backPath = path.join(typePath, backName);
 
         if (fronts[index]) {
-          fs.writeFileSync(frontPath, fronts[index].buffer);
+          const frontPng = await renderTilePng(fronts[index].buffer, exportOpts);
+          fs.writeFileSync(frontPath, frontPng);
         }
 
         if (backs[index]) {
-          fs.writeFileSync(backPath, backs[index].buffer);
+          const backPng = await renderTilePng(backs[index].buffer, exportOpts);
+          fs.writeFileSync(backPath, backPng);
         }
+
+        const generatedIndex = row * parseInt(cols) + col;
+        const signName =
+          generatedNames[generatedIndex] || `${baseName} ${row + 1},${col + 1}`;
+        const textlineTemplateEntry = textlineTemplate
+          ? [
+              {
+                label: textlineTemplate,
+                x: 8,
+                y: 8,
+                width: 8,
+                color: 16777215,
+              },
+            ]
+          : [];
 
         newSigns.push({
           id,
-          name: `${baseName} ${row + 1},${col + 1}`,
+          name: signName,
           type,
           front: frontName,
           back: backs[index] ? backName : null,
           halfheight: false,
-          textlines: []
+          textlines: textlineTemplateEntry
         });
 
         index++;
@@ -1591,7 +1601,9 @@ app.post("/signpack/fragment-upload/:packId", isLoggedIn, uploadFragmentTiles.fi
 
 app.use('/js', express.static(path.join(__dirname, 'public/js')));
 
+app.use("/api/ram-ai", createRamAiRouter({ ramAi }));
 
 app.listen(PORT, () => {
   console.log(`Signpack Maker running at http://localhost:${PORT}`);
 });
+

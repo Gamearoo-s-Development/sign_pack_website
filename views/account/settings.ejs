@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Account Settings | Signpack Maker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="shortcut icon" href="/images/sign.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/brand.css" />
+  <link rel="stylesheet" href="/css/editor.css" />
+  <link rel="stylesheet" href="/css/account-settings.css" />
+</head>
+<body class="editor-app account-settings-page">
+  <header class="editor-topbar">
+    <div class="editor-topbar-inner">
+      <%- include('../partials/brand', { brandHref: '/', brandClass: 'editor-brand', brandTitleTag: 'h1' }) %>
+      <div class="editor-topbar-actions">
+        <a href="/signpack" class="btn editor-btn editor-btn-ghost"><i class="fa fa-arrow-left"></i> Back to Editor</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="account-settings-main container-fluid">
+    <div id="accountToast" class="account-toast" role="status" aria-live="polite" hidden></div>
+
+    <div class="account-settings-grid">
+      <section class="editor-card account-card">
+        <div class="editor-section-head">
+          <span class="editor-section-num"><i class="fa fa-user"></i></span>
+          <h3>Profile</h3>
+        </div>
+
+        <div class="account-avatar-block">
+          <div class="account-avatar-preview-wrap">
+            <% if (user.avatarUrl) { %>
+              <img id="accountAvatarPreview" class="account-avatar-preview" src="<%= user.avatarUrl %>" alt="Profile picture" />
+            <% } else { %>
+              <div id="accountAvatarPreview" class="account-avatar-preview is-initials" data-initials="<%= user.initials %>"><%= user.initials %></div>
+            <% } %>
+          </div>
+          <div class="account-avatar-actions">
+            <p class="account-hint mb-2">PNG, JPG, JPEG, or WEBP — max 5 MB. Square crop applied automatically.</p>
+            <form id="accountAvatarForm" enctype="multipart/form-data">
+              <input type="file" id="accountAvatarInput" name="avatar" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden />
+              <button type="button" class="btn editor-btn editor-btn-accent-outline" id="accountAvatarPickBtn">
+                <i class="fa fa-upload"></i> Upload photo
+              </button>
+              <% if (user.avatarUrl) { %>
+                <button type="button" class="btn editor-btn editor-btn-ghost" id="accountAvatarRemoveBtn">
+                  <i class="fa fa-trash"></i> Remove
+                </button>
+              <% } else { %>
+                <button type="button" class="btn editor-btn editor-btn-ghost" id="accountAvatarRemoveBtn" hidden>
+                  <i class="fa fa-trash"></i> Remove
+                </button>
+              <% } %>
+            </form>
+          </div>
+        </div>
+
+        <form id="accountProfileForm" class="account-profile-form">
+          <div class="mb-3">
+            <label class="form-label" for="displayName">Display name</label>
+            <input class="form-control editor-input" type="text" id="displayName" name="displayName" maxlength="48" value="<%= user.displayNameInput %>" placeholder="<%= user.username %>" />
+            <div class="form-text text-secondary">Username for packs: <strong><%= user.username %></strong> (cannot be changed here)</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control editor-input" type="email" value="<%= user.email %>" readonly disabled />
+          </div>
+          <button type="submit" class="btn editor-btn editor-btn-accent" id="accountProfileSaveBtn">
+            <i class="fa fa-floppy-disk"></i> Save changes
+          </button>
+        </form>
+      </section>
+
+      <section class="editor-card account-card">
+        <div class="editor-section-head">
+          <span class="editor-section-num"><i class="fa fa-shield-halved"></i></span>
+          <h3>Security</h3>
+        </div>
+        <p class="account-hint">Change your password using the email reset flow.</p>
+        <a href="/forgot-password" class="btn editor-btn editor-btn-accent-outline mb-3">
+          <i class="fa fa-key"></i> Change / reset password
+        </a>
+
+        <div class="account-passkeys">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="h6 mb-0 text-warning"><i class="fa fa-fingerprint me-1"></i> Passkeys</h4>
+            <button type="button" class="btn editor-btn editor-btn-accent-outline btn-sm" id="addPasskeyBtn" <%= webauthnEnabled ? "" : "disabled" %>>
+              <i class="fa fa-plus"></i> Add passkey
+            </button>
+          </div>
+          <p class="account-hint mb-2">Use passkeys for passwordless sign-in on supported devices.</p>
+          <div id="passkeysList" class="account-passkey-list">
+            <% if (passkeys && passkeys.length) { %>
+              <% passkeys.forEach(function(p) { %>
+                <div class="account-passkey-item" data-credential-id="<%= p.credentialID %>">
+                  <div>
+                    <strong><%= p.name || "Passkey" %></strong>
+                    <div class="small text-secondary">Created: <%= p.createdAt ? new Date(p.createdAt).toLocaleString() : "Unknown" %></div>
+                    <div class="small text-secondary">Last used: <%= p.lastUsedAt ? new Date(p.lastUsedAt).toLocaleString() : "Never" %></div>
+                  </div>
+                  <button type="button" class="btn editor-btn editor-btn-ghost btn-sm account-remove-passkey-btn">
+                    <i class="fa fa-trash"></i> Remove
+                  </button>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <p class="small text-secondary mb-0" id="passkeysEmptyState">No passkeys added yet.</p>
+            <% } %>
+          </div>
+        </div>
+      </section>
+
+      <section class="editor-card account-card account-danger-card">
+        <div class="editor-section-head">
+          <span class="editor-section-num is-danger"><i class="fa fa-triangle-exclamation"></i></span>
+          <h3>Danger zone</h3>
+        </div>
+        <p class="account-hint mb-3">
+          Permanently delete your account, signpacks under <code>/users/<%= user.username %></code>, and your profile picture.
+        </p>
+        <a href="/account/delete" class="btn editor-btn editor-btn-danger">
+          <i class="fa fa-trash-can"></i> Delete account
+        </a>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    window.ACCOUNT_SETTINGS = {
+      initials: "<%= user.initials %>",
+      avatarUrl: <%- JSON.stringify(user.avatarUrl || null) %>,
+      passkeys: <%- JSON.stringify(passkeys || []) %>,
+      webauthnEnabled: <%- JSON.stringify(!!webauthnEnabled) %>,
+      flash: <%- JSON.stringify(flash || null) %>,
+      flashMessage: <%- JSON.stringify(flashMessage || null) %>
+    };
+  </script>
+  <script type="module">
+    import { startRegistration } from "https://cdn.jsdelivr.net/npm/@simplewebauthn/browser/+esm";
+    window.startPasskeyRegistration = startRegistration;
+  </script>
+  <script src="/js/account-settings.js"></script>
+</body>
+</html>

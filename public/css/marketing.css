@@ -27,9 +27,16 @@ body.site-marketing {
   -webkit-backdrop-filter: blur(8px);
 }
 
-.site-nav .navbar-brand {
-  font-weight: 700;
-  color: var(--accent) !important;
+.site-nav .site-nav-brand {
+  margin-right: 0.75rem;
+}
+
+.site-nav .site-nav-brand .spm-brand-title {
+  color: var(--accent);
+}
+
+.site-nav .site-nav-brand .spm-brand-subtitle {
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .site-nav .nav-link {

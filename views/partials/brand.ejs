@@ -1,0 +1,39 @@
+<%
+  /* Use locals.* so omitted include options (e.g. brandLink) never throw ReferenceError. */
+  /* Cannot assign `const brandClass = … brandClass` — TDZ if same name as include key. */
+  const href = typeof locals.brandHref === "string" ? locals.brandHref : "/";
+  const subtitle =
+    typeof locals.brandSubtitle === "string" ? locals.brandSubtitle : "Traffic Control Mod";
+  const brandClassAttr = typeof locals.brandClass === "string" ? locals.brandClass : "";
+  const titleTag = locals.brandTitleTag === "h1" ? "h1" : "span";
+  const useLink = locals.brandLink !== false;
+%>
+<% if (useLink) { %>
+  <a class="spm-brand <%= brandClassAttr %>" href="<%= href %>" aria-label="Signpack Maker">
+    <span class="spm-brand-logo-wrap" aria-hidden="true">
+      <img src="/images/brand/signpack-maker-logo.png" alt="Signpack Maker" class="spm-brand-logo" />
+    </span>
+    <span class="spm-brand-text">
+      <% if (titleTag === "h1") { %>
+        <h1 class="spm-brand-title">Signpack Maker</h1>
+      <% } else { %>
+        <span class="spm-brand-title">Signpack Maker</span>
+      <% } %>
+      <span class="spm-brand-subtitle"><%= subtitle %></span>
+    </span>
+  </a>
+<% } else { %>
+  <div class="spm-brand <%= brandClassAttr %>" role="img" aria-label="Signpack Maker">
+    <span class="spm-brand-logo-wrap" aria-hidden="true">
+      <img src="/images/brand/signpack-maker-logo.png" alt="Signpack Maker" class="spm-brand-logo" />
+    </span>
+    <span class="spm-brand-text">
+      <% if (titleTag === "h1") { %>
+        <h1 class="spm-brand-title">Signpack Maker</h1>
+      <% } else { %>
+        <span class="spm-brand-title">Signpack Maker</span>
+      <% } %>
+      <span class="spm-brand-subtitle"><%= subtitle %></span>
+    </span>
+  </div>
+<% } %>
