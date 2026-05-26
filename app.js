@@ -66,8 +66,35 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.set('trust proxy', true);
 
+const AUTH_DEBUG = process.env.AUTH_DEBUG === "1" || process.env.AUTH_DEBUG === "true";
+
+function authDebug(req, res, next) {
+  if (!AUTH_DEBUG) return next();
+  const origRedirect = res.redirect.bind(res);
+  res.redirect = function authRedirect(url, ...rest) {
+    console.debug("[auth] redirect", req.method, req.originalUrl || req.url, "->", url, {
+      isAuth: !!req.session?.isAuth,
+      passport: typeof req.isAuthenticated === "function" ? req.isAuthenticated() : undefined,
+      session: !!req.session,
+    });
+    return origRedirect(url, ...rest);
+  };
+  next();
+}
+
+function isLoggedIn(req, res, next) {
+  if (req.session?.isAuth) return next();
+  if (AUTH_DEBUG) {
+    console.debug("[auth] isLoggedIn denied", req.method, req.originalUrl || req.url, {
+      isAuth: !!req.session?.isAuth,
+      session: !!req.session,
+    });
+  }
+  return res.redirect("/login");
+}
 
 app.use(morgan("dev"));
+app.use(authDebug);
 app.use(express.static(path.join(__dirname, "public"), {
   extensions: ["html"]     // so /app/update resolves to /app/update.html
 }));
@@ -89,11 +116,6 @@ mongoose
 
 app.use(express.urlencoded({ extended: true }));
 console.log("ready")
-function isLoggedIn(req, res, next) {
-  if (req.session?.isAuth) return next();
-  return res.redirect("/login");
-}
-
 
 const userPath = path.join(__dirname, "users");
 
@@ -175,13 +197,20 @@ const upload = multer({ storage, limits: {
   } });
 
 app.get("/login", async (req, res) => {
-  let args = {
-    domain
-}
+  if (AUTH_DEBUG) {
+    console.debug("[auth] GET /login", {
+      isAuth: !!req.session?.isAuth,
+      passport: typeof req.isAuthenticated === "function" ? req.isAuthenticated() : undefined,
+      session: !!req.session,
+    });
+  }
 
-return res.render("login", args)
+  if (req.session?.isAuth) {
+    return res.redirect("/signpack");
+  }
 
-})
+  return res.render("login", { domain });
+});
 
 
 

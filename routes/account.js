@@ -20,7 +20,8 @@ function createAccountRouter({ usersDB, isLoggedIn, webauthn }) {
   ensureAvatarDir();
   const router = express.Router();
 
-  router.use(isLoggedIn);
+  // Only protect /account/* — do not apply globally (router is mounted at "/").
+  router.use("/account", isLoggedIn);
 
   router.get("/account", async (req, res) => {
     try {
