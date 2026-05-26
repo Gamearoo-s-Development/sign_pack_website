@@ -5,9 +5,10 @@ const {
   verifyRegistration,
   authenticationOptions,
   verifyAuthentication,
-  authenticatorFromPasskey,
   normalizeCredentialId,
   credentialIdFromAuthBody,
+  isStoredPasskeyValid,
+  webAuthnCredentialFromPasskey,
   saveSession,
   passkeyDebug,
 } = require("../lib/passkeys");
@@ -21,6 +22,9 @@ const {
 
 const PASSKEY_NOT_FOUND_MSG =
   "Passkey not found for this account. Sign in with your password and add a passkey in Account Settings.";
+
+const PASSKEY_REREGISTER_MSG =
+  "This passkey must be re-registered. Remove it in Account Settings, then add a new passkey.";
 
 function requireAuth(req, res, next) {
   if (req.session?.isAuth && req.session?.user?._id) return next();
@@ -114,8 +118,8 @@ function createPasskeyRouter({ usersDB, webauthn }) {
       const persist = await persistPasskey(usersDB, req.session.user._id, {
         credentialID,
         credentialPublicKey: info.credential.publicKey,
-        counter: info.credential.counter,
-        transports: req.body?.response?.transports ?? info.credential.transports,
+        counter: Number(info.credential.counter ?? 0),
+        transports: req.body?.response?.transports ?? info.credential.transports ?? [],
         name: req.body?.passkeyName || "Passkey",
       });
 
@@ -249,12 +253,34 @@ function createPasskeyRouter({ usersDB, webauthn }) {
         return res.status(403).json({ ok: false, error: "Passkey does not match that email." });
       }
 
-      const verification = await verifyAuthentication(
-        req.body,
-        expectedChallenge,
-        authenticatorFromPasskey(passkey),
-        webauthn
-      );
+      const webauthnCredential = webAuthnCredentialFromPasskey(passkey);
+      passkeyDebug("login verify pre-check", {
+        foundPasskey: true,
+        storedValid: isStoredPasskeyValid(passkey),
+        incomingLen: credentialID.length,
+        incomingPrefix: credentialID.slice(0, 8),
+        counter: webauthnCredential ? webauthnCredential.counter : null,
+        counterType: webauthnCredential ? typeof webauthnCredential.counter : "n/a",
+      });
+
+      if (!webauthnCredential) {
+        return res.status(400).json({ ok: false, error: PASSKEY_REREGISTER_MSG });
+      }
+
+      let verification;
+      try {
+        verification = await verifyAuthentication(
+          req.body,
+          expectedChallenge,
+          passkey,
+          webauthn
+        );
+      } catch (err) {
+        if (err.code === "INVALID_STORED_PASSKEY") {
+          return res.status(400).json({ ok: false, error: PASSKEY_REREGISTER_MSG });
+        }
+        throw err;
+      }
 
       if (!verification.verified) {
         return res.status(400).json({ ok: false, error: "Passkey login failed." });

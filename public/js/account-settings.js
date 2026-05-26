@@ -78,6 +78,10 @@
     }
     passkeysListEl.innerHTML = passkeys
       .map(function (p) {
+        var warn =
+          p.needsReregister
+            ? '<div class="small text-warning mt-1">Needs re-register — remove and add again.</div>'
+            : "";
         return (
           '<div class="account-passkey-item" data-credential-id="' +
           String(p.credentialID || "") +
@@ -92,6 +96,7 @@
           '<div class="small text-secondary">Last used: ' +
           fmtDate(p.lastUsedAt) +
           "</div>" +
+          warn +
           "</div>" +
           '<button type="button" class="btn editor-btn editor-btn-ghost btn-sm account-remove-passkey-btn">' +
           '<i class="fa fa-trash"></i> Remove</button></div>'
